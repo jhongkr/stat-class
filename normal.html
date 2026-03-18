@@ -126,12 +126,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="card-title">파라미터 조절</div>
     <div class="ctrl">
       <span class="ctrl-label">평균 μ</span>
-      <input type="range" min="20" max="180" value="100" id="mu1" oninput="drawTab1()"/>
+      <input type="range" min="0" max="180" value="100" id="mu1" oninput="drawTab1()"/>
       <span class="ctrl-val" id="mu1v">100</span>
     </div>
     <div class="ctrl">
       <span class="ctrl-label">표준편차 σ</span>
-      <input type="range" min="5" max="40" value="15" id="sd1" oninput="drawTab1()"/>
+      <input type="range" min="1" max="40" value="15" id="sd1" oninput="drawTab1()"/>
       <span class="ctrl-val" id="sd1v">15</span>
     </div>
     <svg id="svg1" class="svg-wrap" style="margin-top:10px;"></svg>
