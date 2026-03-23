@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>2026-1학기 통계 (Dr. Hong)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:sans-serif;background:#f4f7f6;color:#1e2a3a;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+#lockScreen{width:100%;max-width:360px;padding:0 24px;}
+.lock-card{background:#fff;border-radius:16px;padding:44px 36px;box-shadow:0 4px 24px rgba(0,0,0,0.10);text-align:center;}
+.lock-icon{font-size:42px;margin-bottom:14px;}
+.lock-title{font-size:17px;font-weight:700;margin-bottom:6px;}
+.lock-sub{font-size:13px;color:#999;margin-bottom:28px;line-height:1.6;}
+.pw-input{width:100%;padding:13px 16px;border:2px solid #e0e0e0;border-radius:10px;font-size:20px;text-align:center;letter-spacing:6px;outline:none;transition:border-color .2s;font-family:monospace;}
+.pw-input:focus{border-color:#1abc9c;}
+.pw-btn{width:100%;margin-top:12px;padding:13px;background:#1abc9c;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s;}
+.pw-btn:hover{background:#0e8f72;}
+.pw-error{color:#e53935;font-size:13px;margin-top:10px;min-height:18px;}
+.pw-hint{font-size:12px;color:#bbb;margin-top:20px;}
+#mainScreen{display:none;width:100%;max-width:620px;padding:40px 24px;}
+h1{font-size:18px;font-weight:700;margin-bottom:28px;border-bottom:2px solid #1abc9c;padding-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.logout-btn{font-size:12px;color:#bbb;background:none;border:1px solid #e0e0e0;border-radius:20px;padding:4px 12px;cursor:pointer;font-family:sans-serif;}
+.logout-btn:hover{color:#e53935;border-color:#e53935;}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+th{text-align:left;font-size:12px;color:#aaa;padding:10px 16px;background:#fafafa;border-bottom:1px solid #eee;font-weight:500;}
+td{padding:16px;border-bottom:1px solid #f0f0f0;font-size:14px;vertical-align:middle;}
+td:first-child{font-weight:600;width:42%;}
+td:nth-child(2){color:#aaa;font-family:monospace;font-size:12px;width:33%;}
+tr:last-child td{border-bottom:none;}
+a{color:#0e8f72;text-decoration:none;font-weight:600;}
+a:hover{text-decoration:underline;}
+.tag-soon{font-size:11px;color:#aaa;background:#f3f3f3;border-radius:20px;padding:2px 8px;font-weight:400;margin-left:4px;}
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-icon">🔐</div>
+    <div class="lock-title">2026-1학기 통계</div>
+    <div class="lock-sub">Dr. Hong's Class<br>수강생 전용 페이지입니다.</div>
+    <input class="pw-input" type="password" id="pwInput" maxlength="20"
+      placeholder="••••" onkeydown="if(event.key==='Enter')checkPW()"/>
+    <button class="pw-btn" onclick="checkPW()">입장</button>
+    <div class="pw-error" id="pwError"></div>
+    <div class="pw-hint">비밀번호를 모르면 담당 교수에게 문의하세요.</div>
+  </div>
+</div>
+
+<div id="mainScreen">
+  <h1>
+    2026-1학기 통계 (Dr. Hong)
+    <button class="logout-btn" onclick="logout()">나가기</button>
+  </h1>
+  <table>
+    <tr>
+      <th>제목</th>
+      <th>파일명</th>
+      <th>링크</th>
+    </tr>
+    <tr>
+      <td>01 · 정규분포</td>
+      <td>normal.html</td>
+      <td><a href="normal.html">열기 →</a></td>
+    </tr>
+    <tr>
+      <td>02 · 중심극한정리</td>
+      <td>CLT_simulation.html</td>
+      <td><a href="CLT_simulation.html">열기 →</a></td>
+    </tr>
+    <tr>
+      <td>03 · 중심극한정리 상세</td>
+      <td>CLT_simulation_tabs.html</td>
+      <td><a href="CLT_simulation_tabs.html">열기 →</a></td>
+    </tr>
+    <tr>
+      <td>04 · 추정·신뢰구간 <span class="tag-soon">곧!</span></td>
+      <td>confidence.html</td>
+      <td><a href="confidence.html">열기 →</a></td>
+    </tr>
+  </table>
+</div>
+
+<script>
+const PW='1234';
+
+function checkPW(){
+  const val=document.getElementById('pwInput').value;
+  if(val===PW){
+    sessionStorage.setItem('auth','ok');
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('mainScreen').style.display='block';
+    document.getElementById('pwError').textContent='';
+  } else {
+    document.getElementById('pwError').textContent='비밀번호가 맞지 않습니다.';
+    const input=document.getElementById('pwInput');
+    input.value='';
+    input.style.borderColor='#e53935';
+    input.focus();
+    setTimeout(()=>input.style.borderColor='#e0e0e0',1200);
+  }
+}
+
+function logout(){
+  sessionStorage.removeItem('auth');
+  document.getElementById('mainScreen').style.display='none';
+  document.getElementById('lockScreen').style.display='flex';
+  document.getElementById('pwInput').value='';
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  if(sessionStorage.getItem('auth')==='ok'){
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('mainScreen').style.display='block';
+  }
+  document.getElementById('pwInput').focus();
+});
+</script>
+</body>
+</html>
