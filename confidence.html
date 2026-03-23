@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Dr. Hong's Statistics — 신뢰구간 직관</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2230;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+  --text:#e6edf3;--text2:#8b949e;--text3:#484f58;
+  --teal:#1abc9c;--teal2:#0e8f72;--teal3:#0a6654;--teal-glow:rgba(26,188,156,0.15);
+  --blue:#58a6ff;--amber:#e3b341;--red:#f85149;--r:10px;--r2:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.7;}
+.header{padding:20px 40px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;position:sticky;top:0;background:rgba(13,17,23,0.95);backdrop-filter:blur(12px);z-index:100;}
+.header-badge{background:var(--teal-glow);border:1px solid var(--teal2);color:var(--teal);font-size:11px;font-weight:700;letter-spacing:.12em;padding:4px 10px;border-radius:20px;text-transform:uppercase;white-space:nowrap;}
+.header h1{font-size:17px;font-weight:500;}
+.header h1 span{color:var(--teal);}
+.tab-bar{display:flex;gap:4px;padding:16px 40px 0;border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab-bar::-webkit-scrollbar{height:0;}
+.tab-btn{padding:9px 18px 11px;font-size:13px;font-family:'Noto Sans KR',sans-serif;font-weight:500;color:var(--text2);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;position:relative;bottom:-1px;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal);}
+.tab-num{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--bg3);color:var(--text2);font-size:11px;font-weight:600;margin-right:6px;transition:background .2s,color .2s;}
+.tab-btn.active .tab-num{background:var(--teal);color:#000;}
+.main{padding:28px 40px 80px;max-width:960px;margin:0 auto;}
+.panel{display:none;animation:fadeIn .25s ease;}
+.panel.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:24px;margin-bottom:18px;}
+.card-title{font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.card-title::before{content:'';display:inline-block;width:3px;height:13px;background:var(--teal);border-radius:2px;}
+.story-box{background:rgba(88,166,255,0.06);border:1px solid rgba(88,166,255,0.2);border-radius:var(--r2);padding:18px 22px;margin-bottom:16px;font-size:14.5px;line-height:1.85;}
+.story-box .tag{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--blue);text-transform:uppercase;display:block;margin-bottom:8px;}
+.story-box strong{color:#fff;}
+.callout{border-radius:var(--r);padding:13px 17px;margin:10px 0;font-size:13.5px;line-height:1.7;}
+.callout.green{background:rgba(26,188,156,0.08);border-left:3px solid var(--teal2);color:var(--text2);}
+.callout.amber{background:rgba(227,179,65,0.07);border-left:3px solid var(--amber);color:var(--text2);}
+.callout strong{color:var(--text);}
+.btn{padding:8px 20px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .15s;}
+.btn:hover{background:var(--bg2);border-color:var(--teal2);}
+.btn.primary{background:rgba(26,188,156,0.12);border-color:var(--teal2);color:var(--teal);}
+.btn.primary:hover{background:rgba(26,188,156,0.22);}
+.ctrl{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.ctrl-label{font-size:13px;color:var(--text2);min-width:110px;}
+.ctrl input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--bg3);outline:none;cursor:pointer;}
+.ctrl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 3px rgba(26,188,156,0.2);}
+.ctrl-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--teal);min-width:48px;text-align:right;}
+.num-input{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:7px 11px;font-size:14px;font-family:'JetBrains Mono',monospace;color:var(--text);width:100px;outline:none;}
+.num-input:focus{border-color:var(--teal);}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;}
+.stat-box .lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
+.stat-box .val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:var(--teal);}
+.stat-box .val.blue{color:var(--blue);}
+.stat-box .val.amber{color:var(--amber);}
+.formula-bar{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:12px 18px;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);text-align:center;margin:12px 0;line-height:1.9;}
+.formula-bar .hi{color:var(--teal);font-weight:600;}
+.formula-bar .hi2{color:var(--amber);font-weight:600;}
+.svg-wrap{width:100%;display:block;}
+.conf-btns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.conf-btn{padding:10px 28px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:16px;font-family:'Noto Sans KR',sans-serif;font-weight:700;cursor:pointer;transition:all .18s;}
+.conf-btn:hover{border-color:var(--teal2);color:var(--text);}
+.conf-btn.active{background:rgba(26,188,156,0.15);border-color:var(--teal);color:var(--teal);box-shadow:0 0 0 2px rgba(26,188,156,0.15);}
+.verdict{text-align:center;padding:10px 0 2px;font-size:18px;font-weight:700;min-height:40px;transition:color .3s;}
+.quiz-q{background:var(--bg3);border-left:3px solid var(--blue);border-radius:0 var(--r) var(--r) 0;padding:13px 17px;font-size:14px;line-height:1.75;color:var(--text);margin-bottom:11px;}
+.quiz-opts{display:flex;flex-direction:column;gap:7px;margin-bottom:8px;}
+.quiz-opt{display:flex;align-items:flex-start;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:11px 15px;cursor:pointer;transition:border-color .15s,background .15s;font-size:14px;color:var(--text2);}
+.quiz-opt:hover{border-color:var(--teal2);background:rgba(26,188,156,0.05);}
+.quiz-opt.correct{border-color:var(--teal);background:rgba(26,188,156,0.1);color:var(--text);}
+.quiz-opt.wrong{border-color:var(--red);background:rgba(248,81,73,0.08);}
+.quiz-opt .ol{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--teal);flex-shrink:0;min-width:20px;}
+.quiz-opt.wrong .ol{color:var(--red);}
+.quiz-fb{border-radius:var(--r);padding:11px 15px;font-size:13px;line-height:1.65;display:none;margin-top:6px;}
+.quiz-fb.show{display:block;}
+.quiz-fb.ok{background:rgba(26,188,156,0.08);border:1px solid var(--teal3);color:var(--teal);}
+.quiz-fb.no{background:rgba(248,81,73,0.07);border:1px solid rgba(248,81,73,0.3);color:#ff8080;}
+
+/* 학생 클릭 영역 */
+.scene-wrap{background:var(--bg3);border-radius:var(--r2);overflow:hidden;position:relative;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+.blinking{animation:blink 0.4s ease 3;}
+@media(max-width:640px){.header{padding:13px 16px;}.tab-bar{padding:12px 14px 0;}.main{padding:16px 14px 60px;}.stat-row{grid-template-columns:1fr 1fr;}.conf-btn{padding:10px 18px;font-size:14px;}}
+
+/* ── 드로잉 레이어 ── */
+#drawCanvas{position:absolute;top:0;left:0;width:100%;z-index:9999;pointer-events:none;cursor:crosshair;}
+#drawCanvas.active{pointer-events:all;}
+#drawToolbar{
+  position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:10000;
+  background:rgba(22,27,34,0.96);border:1px solid rgba(255,255,255,0.15);
+  border-radius:24px;padding:14px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);backdrop-filter:blur(12px);user-select:none;
+}
+.dtool-btn{width:36px;height:36px;border-radius:50%;border:2px solid transparent;
+  background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:17px;transition:all .15s;color:#e6edf3;}
+.dtool-btn:hover{background:rgba(255,255,255,0.1);}
+.dtool-btn.on{border-color:#1abc9c;background:rgba(26,188,156,0.2);}
+.dcolor{width:24px;height:24px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s;}
+.dcolor.selected{border-color:#fff;}
+.dsize-wrap{display:flex;align-items:center;justify-content:center;width:36px;height:28px;cursor:pointer;}
+.dsize{border-radius:3px;background:#e6edf3;transition:all .15s;}
+.dsize.selected{background:#1abc9c;}
+.dtool-sep{width:28px;height:1px;background:rgba(255,255,255,0.12);}
+</style>
+</head>
+<body>
+
+<canvas id="drawCanvas"></canvas>
+<div id="drawToolbar">
+  <button class="dtool-btn" id="dpenBtn" onclick="toggleDraw()" title="펜 ON/OFF — 우클릭 또는 D키">✏️</button>
+  <div class="dtool-sep"></div>
+  <div class="dcolor selected" style="background:#f85149;" onclick="setDColor(this,'#f85149')"></div>
+  <div class="dcolor" style="background:#e3b341;" onclick="setDColor(this,'#e3b341')"></div>
+  <div class="dcolor" style="background:#1abc9c;" onclick="setDColor(this,'#1abc9c')"></div>
+  <div class="dcolor" style="background:#58a6ff;" onclick="setDColor(this,'#58a6ff')"></div>
+  <div class="dcolor" style="background:#fff;" onclick="setDColor(this,'#fff')"></div>
+  <div class="dtool-sep"></div>
+  <div class="dsize-wrap" onclick="setDSize(this,3)" title="얇게"><div class="dsize selected" style="width:3px;height:22px;"></div></div>
+  <div class="dsize-wrap" onclick="setDSize(this,6)" title="보통"><div class="dsize" style="width:6px;height:22px;"></div></div>
+  <div class="dsize-wrap" onclick="setDSize(this,12)" title="굵게"><div class="dsize" style="width:12px;height:22px;"></div></div>
+  <div class="dtool-sep"></div>
+  <button class="dtool-btn" id="dhighBtn" onclick="toggleHighlight()" title="형광펜">🖍️</button>
+  <button class="dtool-btn" id="deraserBtn" onclick="toggleEraser()" title="지우개">🧹</button>
+  <button class="dtool-btn" onclick="clearDraw()" title="전체 지우기 (C키)">🗑️</button>
+  <div class="dtool-sep"></div>
+  <span style="font-size:10px;color:#8b949e;text-align:center;line-height:1.4;" id="dstatus">OFF</span>
+</div>
+<header class="header">
+  <span class="header-badge">통계학 — Dr. Hong's Class</span>
+  <h1>신뢰구간의 <span>직관적 이해</span></h1>
+</header>
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab(0)"><span class="tab-num">1</span>막대 비유 — 핵심</button>
+  <button class="tab-btn" onclick="switchTab(1)"><span class="tab-num">2</span>표집분포와 연결</button>
+  <button class="tab-btn" onclick="switchTab(2)"><span class="tab-num">3</span>직접 계산하기</button>
+</nav>
+<main class="main">
+
+<!-- TAB 1 -->
+<div id="panel0" class="panel active">
+
+  <!-- Section 1: 선생님이 막대를 든다 -->
+  <div class="card">
+    <div class="card-title">Section 1 — 선생님이 막대를 들고 있다</div>
+    <div class="conf-btns" id="confBtns" style="margin-bottom:16px;">
+      <button class="conf-btn active" onclick="setConf(40)">신뢰수준 40%</button>
+      <button class="conf-btn" onclick="setConf(60)">신뢰수준 60%</button>
+      <button class="conf-btn" onclick="setConf(80)">신뢰수준 80%</button>
+    </div>
+    <div class="story-box" style="margin-bottom:14px;font-size:13.5px;">
+      <span class="tag">상황</span>
+      <strong>선생님(μ)</strong>이 막대를 양쪽으로 펼친다.<br>
+      신뢰수준 80%이면 막대 안에 <strong>학생 10명 중 8명</strong>이 포함된다.
+    </div>
+    <canvas id="cvs1" style="width:100%;display:block;border-radius:var(--r);background:var(--bg3);"></canvas>
+    <div class="verdict" id="verdict1" style="color:var(--teal);"></div>
+    <div class="callout green" style="margin-top:8px;">
+      신뢰수준이 높을수록 선생님 막대가 길어지고, 더 많은 학생을 포함한다.
+    </div>
+  </div>
+
+  <!-- 장면 2: 학생이 막대를 든다 (클릭) -->
+  <div class="card">
+    <div class="card-title">Section 2 — 이번엔 학생이 막대를 든다 (= 신뢰구간!)</div>
+    <div class="conf-btns" id="confBtns2" style="margin-bottom:14px;">
+      <button class="conf-btn active" onclick="setConf2(40)">신뢰수준 40%</button>
+      <button class="conf-btn" onclick="setConf2(60)">신뢰수준 60%</button>
+      <button class="conf-btn" onclick="setConf2(80)">신뢰수준 80%</button>
+    </div>
+    <div class="story-box" style="margin-bottom:14px;font-size:13.5px;">
+      <span class="tag">역전의 핵심</span>
+      이제 <strong>각 학생</strong>이 같은 길이의 막대를 든다.<br>
+      학생을 클릭하면 막대가 나타나면서 선생님(μ)에게 <strong>닿는지</strong> 확인할 수 있다.<br>
+      막대 길이가 같다면: 선생님 막대 안에 내가 있다 ↔ 내 막대가 선생님에게 닿는다.<br>
+      <strong>이 둘은 완전히 같은 말이다!</strong>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="btn primary" onclick="showAll()">전체 보기</button>
+      <button class="btn" onclick="resetAll()">↺ 초기화</button>
+    </div>
+    <div class="scene-wrap">
+      <canvas id="cvs2" style="width:100%;display:block;cursor:pointer;" onclick="handleClick(event)"></canvas>
+    </div>
+    <div class="verdict" id="verdict2" style="color:var(--text2);">학생을 클릭해보세요 👆</div>
+    <div class="callout amber" style="margin-top:8px;">
+      <strong>⚠️ 흔한 오해:</strong> "μ가 구간 안에 있을 확률이 80%다" → 틀렸다!<br>
+      μ는 항상 같은 자리에 고정. 불확실한 건 <strong>내 막대가 μ에 닿는지 여부</strong>다.<br>
+      올바른 해석: <strong>"이 방법으로 100번 반복하면 약 80번은 막대가 μ에 닿는다."</strong>
+    </div>
+    <div style="margin-top:18px;">
+      <div class="quiz-q">95% 신뢰구간의 올바른 해석은?</div>
+      <div class="quiz-opts" id="q1opts">
+        <div class="quiz-opt" onclick="ansQ('q1',this,false)"><span class="ol">A</span>이 구간 안에 μ가 있을 확률이 95%다.</div>
+        <div class="quiz-opt" onclick="ansQ('q1',this,false)"><span class="ol">B</span>표본의 95%가 이 구간 안에 있다.</div>
+        <div class="quiz-opt" onclick="ansQ('q1',this,true)"><span class="ol">C</span>이 방법으로 반복하면 약 95%의 구간이 μ를 포함한다.</div>
+      </div>
+      <div class="quiz-fb" id="q1fb"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2 -->
+<div id="panel1" class="panel">
+  <div class="story-box">
+    <span class="tag">표집분포와의 연결</span>
+    100명씩 반복해서 뽑으면, 표본평균들은 <strong>정규분포</strong>를 따른다 (중심극한정리).<br>
+    버튼을 눌러 표본을 하나씩 추가하며 확인해보자.
+  </div>
+  <div class="card">
+    <div class="card-title">표집분포 위의 신뢰구간 시뮬레이션</div>
+    <div class="conf-btns" id="confBtnsDist" style="margin-bottom:16px;">
+      <button class="conf-btn" onclick="setConfDist(90)">신뢰수준 90%</button>
+      <button class="conf-btn active" onclick="setConfDist(95)">신뢰수준 95%</button>
+      <button class="conf-btn" onclick="setConfDist(99)">신뢰수준 99%</button>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="btn primary" onclick="addDist()">+1개 추가</button>
+      <button class="btn" id="btnAutoDist" onclick="toggleAutoDist()">▶ 자동</button>
+      <button class="btn" onclick="addBulk(1000)">1,000개 추가</button>
+      <button class="btn" onclick="resetDist()">↺ 초기화</button>
+      <span style="font-size:12px;color:var(--text2);" id="distLabel">μ=170, σ=20, n=100 → 표준오차=2 | z=1.96</span>
+    </div>
+    <svg id="svgDist" class="svg-wrap"></svg>
+    <div id="msgDist" style="text-align:center;min-height:28px;padding:5px 0;font-size:13px;font-weight:500;color:var(--text2);">▶ 버튼을 눌러 표본을 추가해보세요</div>
+    <div id="distNote" style="display:none;margin-top:10px;background:rgba(227,179,65,0.07);border-left:3px solid #e3b341;border-radius:0 var(--r) var(--r) 0;padding:10px 14px;font-size:13px;color:#8b949e;line-height:1.65;"></div>
+    <div class="stat-row" style="margin-top:8px;">
+      <div class="stat-box"><div class="lbl">총 표본 수</div><div class="val" id="distTotal">0</div></div>
+      <div class="stat-box"><div class="lbl">μ 포함 ✓</div><div class="val" style="color:var(--teal);" id="distHit">0</div></div>
+      <div class="stat-box"><div class="lbl">포함 비율</div><div class="val blue" id="distRate">—</div></div>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);"><div style="width:20px;height:4px;background:#1abc9c;border-radius:2px;"></div>μ 포함</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);"><div style="width:20px;height:4px;background:#f85149;border-radius:2px;"></div>μ 미포함</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);"><div style="width:2px;height:14px;background:#e3b341;border-radius:1px;"></div>μ=170</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3 -->
+<div id="panel2" class="panel">
+  <div class="story-box">
+    <span class="tag">공식</span>
+    신뢰구간 = <strong>표본평균 ± 오차한계</strong><br>
+    오차한계 = z × (모표준편차 ÷ √표본크기)
+  </div>
+  <div class="card">
+    <div class="card-title">직접 계산해보기</div>
+
+    <!-- 입력 -->
+    <div class="ctrl"><span class="ctrl-label">표본평균 x̄</span><input type="number" class="num-input" id="xbar" value="170" step="0.1" oninput="ciOffset=0;calcCI()"/></div>
+    <div class="ctrl"><span class="ctrl-label">모표준편차 σ</span><input type="number" class="num-input" id="sigma" value="20" step="0.1" min="0.01" oninput="calcCI()"/></div>
+    <div class="ctrl"><span class="ctrl-label">표본 크기 n</span><input type="number" class="num-input" id="nn" value="100" step="1" min="1" oninput="calcCI()"/></div>
+    <div class="ctrl"><span class="ctrl-label">신뢰수준</span>
+      <select id="zLevel" onchange="calcCI()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:7px 14px;font-size:14px;color:var(--text);outline:none;cursor:pointer;">
+        <option value="1.645">90%</option>
+        <option value="1.96" selected>95%</option>
+        <option value="2.576">99%</option>
+      </select>
+    </div>
+
+    <!-- 단계별 계산 결과 -->
+    <div style="margin-top:18px;display:flex;flex-direction:column;gap:12px;">
+
+      <!-- STEP 1: z값 -->
+      <div style="background:var(--bg3);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px;">① z 값</div>
+          <div style="font-size:14px;color:var(--text2);">정규분포에서 중앙 <span id="ciConfLabel" style="color:var(--teal);font-weight:700;">95%</span>를 포함하는 범위의 경계값</div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;color:var(--amber);" id="ciZval">1.960</div>
+      </div>
+
+      <!-- STEP 2: σ/√n -->
+      <div style="background:var(--bg3);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px;">② σ / √n</div>
+          <div style="font-size:14px;color:var(--text2);" id="ciSEformula">20 / √100 = 20 / 10</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <!-- 분수 표기 -->
+          <div style="display:inline-flex;flex-direction:column;align-items:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--amber);">
+            <span style="font-size:22px;" id="ciFracTop">σ=20</span>
+            <div style="width:100%;height:2px;background:var(--amber);margin:3px 0;"></div>
+            <span style="font-size:22px;" id="ciFracBot">√100</span>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;color:var(--amber);margin-top:4px;" id="ciSEval">= 2.0000</div>
+        </div>
+      </div>
+
+      <!-- STEP 3: 오차한계 -->
+      <div style="background:var(--bg3);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px;">③ 오차한계 = z × (σ/√n)</div>
+          <div style="font-size:14px;color:var(--text2);" id="ciEformula">1.960 × 2.0000</div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;color:var(--teal);" id="ciEval">= 3.9200</div>
+      </div>
+
+      <!-- STEP 4: 신뢰구간 + 뽑기 -->
+      <div style="background:rgba(26,188,156,0.08);border:1px solid var(--teal3);border-radius:var(--r);padding:16px 20px;">
+        <div style="font-size:13px;font-weight:600;color:var(--teal);margin-bottom:10px;">④ 신뢰구간 = 표본평균 ± 오차한계</div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+          <button class="btn primary" onclick="resampleCI()" style="font-size:14px;padding:9px 22px;">🎲 표본 뽑기</button>
+          <span style="font-size:13px;color:var(--text2);">클릭할 때마다 새 표본평균이 등장합니다</span>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:17px;color:var(--text);text-align:center;padding:8px 0;" id="ciFormula">—</div>
+      </div>
+    </div>
+
+    <!-- 그래프 -->
+    <svg id="svgCI" class="svg-wrap" style="margin-top:16px;"></svg>
+
+    <!-- 코멘트 -->
+    <div style="margin-top:12px;background:rgba(88,166,255,0.06);border-left:3px solid rgba(88,166,255,0.4);border-radius:0 var(--r) var(--r) 0;padding:13px 17px;font-size:14px;color:var(--text2);line-height:1.8;" id="ciComment">—</div>
+  </div>
+  <div class="card">
+    <div class="card-title">너비 결정 요인</div>
+    <div class="callout green" style="margin-bottom:18px;">
+      기준: <strong>n=100, 신뢰수준 95%, σ=10</strong> 고정 → 버튼을 눌러 하나씩 변경해보세요.
+    </div>
+
+    <!-- 섹션 1: 표본 크기 -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">① 표본 크기 변경 <span style="color:var(--text2);font-weight:400;">(신뢰수준 95%, σ=10 고정)</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="wNbtns">
+        <button class="conf-btn" onclick="setWN(25)">n = 25 (1/4배)</button>
+        <button class="conf-btn" onclick="setWN(50)">n = 50 (1/2배)</button>
+        <button class="conf-btn active" onclick="setWN(100)">n = 100 (기준)</button>
+        <button class="conf-btn" onclick="setWN(200)">n = 200 (2배)</button>
+        <button class="conf-btn" onclick="setWN(400)">n = 400 (4배)</button>
+      </div>
+      <svg id="svgWN" class="svg-wrap"></svg>
+    </div>
+
+    <!-- 섹션 2: 신뢰수준 -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">② 신뢰수준 변경 <span style="color:var(--text2);font-weight:400;">(n=100, σ=10 고정)</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="wCbtns">
+        <button class="conf-btn" onclick="setWC(90)">신뢰수준 90%</button>
+        <button class="conf-btn active" onclick="setWC(95)">신뢰수준 95% (기준)</button>
+        <button class="conf-btn" onclick="setWC(99)">신뢰수준 99%</button>
+      </div>
+      <svg id="svgWC" class="svg-wrap"></svg>
+    </div>
+
+    <!-- 섹션 3: 모표준편차 -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">③ 모표준편차 변경 <span style="color:var(--text2);font-weight:400;">(n=100, 신뢰수준 95% 고정)</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="wSbtns">
+        <button class="conf-btn" onclick="setWS(5)">σ = 5 (1/2배)</button>
+        <button class="conf-btn active" onclick="setWS(10)">σ = 10 (기준)</button>
+        <button class="conf-btn" onclick="setWS(20)">σ = 20 (2배)</button>
+      </div>
+      <svg id="svgWS" class="svg-wrap"></svg>
+    </div>
+
+    <div style="margin-top:4px;">
+      <div class="quiz-q">표본 크기를 <strong>4배</strong> 늘리면 신뢰구간 너비는?</div>
+      <div class="quiz-opts" id="q2opts">
+        <div class="quiz-opt" onclick="ansQ('q2',this,false)"><span class="ol">A</span>1/4로 줄어든다.</div>
+        <div class="quiz-opt" onclick="ansQ('q2',this,true)"><span class="ol">B</span>1/2로 줄어든다.</div>
+        <div class="quiz-opt" onclick="ansQ('q2',this,false)"><span class="ol">C</span>4배로 늘어난다.</div>
+      </div>
+      <div class="quiz-fb" id="q2fb"></div>
+    </div>
+  </div>
+</div>
+</main>
+
+<script>
+/* === 상수 === */
+const MU=170, SE=2;
+// 학생 10명: 좌우 대칭 5명씩
+// 검증됨: 40%→4명, 60%→6명, 80%→8명 포함
+const DISTS=[1.50,3.06,4.62,6.18,7.74]; // 균등 간격 1.56
+const HB={40:3.840,60:5.400,80:6.960}; // 각 구간 정중앙 — 시각적으로 명확
+// 위치: 좌[0]=가장 안쪽, 우[0]=가장 안쪽
+const STU_POS=[
+  MU-DISTS[0], MU-DISTS[1], MU-DISTS[2], MU-DISTS[3], MU-DISTS[4],
+  MU+DISTS[0], MU+DISTS[1], MU+DISTS[2], MU+DISTS[3], MU+DISTS[4]
+];
+// 표시 순서: 좌쪽 바깥→안쪽, 우쪽 안쪽→바깥 (왼→오른 정렬)
+const STU_ORDER=[4,3,2,1,0,5,6,7,8,9]; // STU_POS 인덱스 순서 (왼→오른)
+const STU_X_SORTED=STU_ORDER.map(i=>STU_POS[i]); // 실제 위치 왼→오른
+
+let curConf=40;
+let curConf2=40; // 장면2 독립 신뢰수준
+let revealed=[];
+let blinkTarget=-1;
+
+/* === 수학 === */
+function erf(x){const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;const sg=x<0?-1:1;x=Math.abs(x);const t=1/(1+p*x);return sg*(1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x));}
+function nCDF(x,mu,s){return 0.5*(1+erf((x-mu)/(s*Math.sqrt(2))));}
+function nPDF(x,mu,s){return(1/(s*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*((x-mu)/s)**2);}
+function linspace(a,b,n){const r=[],s=(b-a)/n;for(let i=0;i<=n;i++)r.push(a+i*s);return r;}
+function randn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function confToZ(c){const t={80:1.282,85:1.645,90:1.645,91:1.695,92:1.751,93:1.812,94:1.881,95:1.960,96:2.054,97:2.170,98:2.326,99:2.576};return t[Math.round(c)]||1.96;}
+
+/* === SVG === */
+const NS='http://www.w3.org/2000/svg';
+function S(tag,a,t){const e=document.createElementNS(NS,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));if(t!==undefined)e.textContent=t;return e;}
+function setSVG(el,w,h){el.setAttribute('viewBox',`0 0 ${w} ${h}`);el.setAttribute('height',h);}
+
+/* === 퀴즈 === */
+function ansQ(id,el,ok){
+  const opts=document.getElementById(id+'opts');
+  if(opts.dataset.done)return;
+  opts.dataset.done='1';
+  el.classList.add(ok?'correct':'wrong');
+  const fb=document.getElementById(id+'fb');
+  fb.classList.add('show',ok?'ok':'no');
+  const msgs={
+    q1ok:'✓ 정답! 신뢰구간은 μ가 어디 있는지가 아니라, 내가 만든 막대가 μ에 닿는지의 문제입니다.',
+    q1no:'✗ μ는 항상 같은 자리에 고정되어 있습니다. 불확실한 건 내가 뽑은 막대가 μ에 닿는지입니다.',
+    q2ok:'✓ 정답! 표본 크기를 4배로 늘리면 오차한계가 절반이 되어 너비도 절반이 됩니다.',
+    q2no:'✗ 오차한계 = 1.96 × σ/√n → n을 4배로 하면 √4=2이므로 오차한계가 1/2로 줄어 너비도 절반입니다.'
+  };
+  fb.textContent=msgs[id+(ok?'ok':'no')]||(ok?'✓ 정답!':'✗ 다시!');
+}
+
+/* ============================================================
+   메인 캔버스 — 학생 클릭
+   ============================================================ */
+/* ============================================================
+   공통 레이아웃 상수
+   ============================================================ */
+const ML=50, MR=50;
+const XMIN=MU-10.5, XMAX=MU+10.5;
+function toX(v,W){return ML+(v-XMIN)/(XMAX-XMIN)*(W-ML-MR);}
+
+/* ============================================================
+   장면 1 — 선생님이 막대를 든다
+   ============================================================ */
+function drawScene1(){
+  const cvs=document.getElementById('cvs1');
+  const W=cvs.parentElement.clientWidth||700;
+  const H=260, TEACH_Y=68, STU_Y=185;
+  cvs.width=W; cvs.height=H;
+  const ctx=cvs.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const muX=toX(MU,W);
+  const hb=HB[curConf];
+
+  /* μ 수직선 */
+  ctx.setLineDash([6,5]);ctx.strokeStyle='rgba(227,179,65,0.4)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(muX,10);ctx.lineTo(muX,H-10);ctx.stroke();ctx.setLineDash([]);
+
+  /* 선생님 막대 */
+  const barL=toX(MU-hb,W), barR=toX(MU+hb,W);
+  const BAR_H=26;
+  ctx.fillStyle='rgba(227,179,65,0.12)';
+  ctx.beginPath();ctx.roundRect(barL,TEACH_Y-BAR_H/2,barR-barL,BAR_H,BAR_H/2);ctx.fill();
+  ctx.strokeStyle='#e3b341';ctx.lineWidth=2.5;ctx.setLineDash([]);
+  ctx.beginPath();ctx.roundRect(barL,TEACH_Y-BAR_H/2,barR-barL,BAR_H,BAR_H/2);ctx.stroke();
+  [barL,barR].forEach(bx=>{
+    ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(bx,TEACH_Y-BAR_H/2-7);ctx.lineTo(bx,TEACH_Y+BAR_H/2+7);ctx.stroke();
+  });
+
+  /* 선생님 이모지 */
+  ctx.font='34px serif';ctx.textAlign='center';
+  ctx.fillText('👨‍🏫',muX,TEACH_Y-BAR_H/2-12);
+  ctx.fillStyle='#e3b341';ctx.font='bold 12px JetBrains Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('μ (모평균)',muX,TEACH_Y+BAR_H/2+20);
+
+  /* 지면선 */
+  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(ML,STU_Y+32);ctx.lineTo(W-MR,STU_Y+32);ctx.stroke();
+
+  /* 학생 10명 */
+  let hitCount=0;
+  STU_X_SORTED.forEach((pos,i)=>{
+    const sx=toX(pos,W);
+    const inside=Math.abs(pos-MU)<hb;
+    if(inside) hitCount++;
+    const col=inside?'#1abc9c':'#f85149';
+    if(inside){
+      ctx.strokeStyle=col+'44';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(sx,STU_Y-22);ctx.lineTo(sx,TEACH_Y+BAR_H/2+8);ctx.stroke();ctx.setLineDash([]);
+    }
+    ctx.font='26px serif';ctx.textAlign='center';
+    ctx.fillText('🧑‍🎓',sx,STU_Y+4);
+    ctx.fillStyle=col;ctx.font='bold 12px Noto Sans KR,sans-serif';ctx.textAlign='center';
+    ctx.fillText(inside?'✓':'✗',sx,STU_Y+24);
+  });
+
+  const v=document.getElementById('verdict1');
+  v.style.color=hitCount>=8?'#1abc9c':hitCount>=6?'#e3b341':'#f85149';
+  v.textContent=`신뢰수준 ${curConf}% → 선생님 막대 안에 학생 ${hitCount}명 / 10명 포함`;
+}
+
+/* ============================================================
+   장면 2 — 학생이 막대를 든다 (클릭), 막대는 학생 아래
+   ============================================================ */
+const S2_STU_Y=130, S2_BAR_Y=170; // 학생Y, 막대Y
+
+function drawScene2(blink=-1){
+  const cvs=document.getElementById('cvs2');
+  const W=cvs.parentElement.clientWidth||700;
+  const H=280, TEACH_Y=50;
+  cvs.width=W; cvs.height=H;
+  const ctx=cvs.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const muX=toX(MU,W);
+  const hb=HB[curConf2];
+
+  /* μ 수직선 */
+  ctx.setLineDash([6,5]);ctx.strokeStyle='rgba(227,179,65,0.5)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(muX,0);ctx.lineTo(muX,H);ctx.stroke();ctx.setLineDash([]);
+
+  /* 선생님 */
+  ctx.font='30px serif';ctx.textAlign='center';
+  ctx.fillText('👨‍🏫',muX,TEACH_Y+4);
+  ctx.fillStyle='#e3b341';ctx.font='bold 12px JetBrains Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('μ (모평균)',muX,TEACH_Y+22);
+
+  /* 구분선 */
+  ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(ML,76);ctx.lineTo(W-MR,76);ctx.stroke();
+
+  /* 학생 10명 */
+  STU_X_SORTED.forEach((pos,i)=>{
+    const sx=toX(pos,W);
+    const isRevealed=revealed.includes(i);
+    const hit=Math.abs(pos-MU)<hb;
+    const col=hit?'#1abc9c':'#f85149';
+    const isBlinking=blink===i;
+
+    /* 반짝임 */
+    if(isBlinking){
+      ctx.fillStyle='rgba(255,255,100,0.22)';
+      ctx.beginPath();ctx.arc(sx,S2_STU_Y,26,0,Math.PI*2);ctx.fill();
+    }
+
+    /* 학생 이모지 */
+    ctx.font='26px serif';ctx.textAlign='center';
+    ctx.globalAlpha=isBlinking?0.4:1;
+    ctx.fillText('🧑‍🎓',sx,S2_STU_Y+6);
+    ctx.globalAlpha=1;
+
+    /* 번호 */
+    ctx.fillStyle=isRevealed?col:'#484f58';
+    ctx.font='bold 11px JetBrains Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(String(i+1),sx,S2_STU_Y+24);
+
+    /* 막대 — 학생 아래 */
+    if(isRevealed){
+      const halfPx=hb/(XMAX-XMIN)*(W-ML-MR);
+      const bL=sx-halfPx, bR=sx+halfPx;
+
+      ctx.strokeStyle=col;ctx.lineWidth=5;ctx.lineCap='round';ctx.setLineDash([]);
+      ctx.beginPath();ctx.moveTo(bL,S2_BAR_Y);ctx.lineTo(bR,S2_BAR_Y);ctx.stroke();
+      ctx.lineWidth=2.5;
+      [bL,bR].forEach(bx=>{
+        ctx.beginPath();ctx.moveTo(bx,S2_BAR_Y-7);ctx.lineTo(bx,S2_BAR_Y+7);ctx.stroke();
+      });
+      ctx.fillStyle='#e6edf3';ctx.beginPath();ctx.arc(sx,S2_BAR_Y,4,0,Math.PI*2);ctx.fill();
+
+      if(hit){
+        ctx.fillStyle='#1abc9c';ctx.beginPath();ctx.arc(muX,S2_BAR_Y,8,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#0d1117';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+        ctx.fillText('✓',muX,S2_BAR_Y+4);
+      } else {
+        const gap=pos<MU?[bR,muX]:[muX,bL];
+        ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(248,81,73,0.4)';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(gap[0],S2_BAR_Y);ctx.lineTo(gap[1],S2_BAR_Y);ctx.stroke();ctx.setLineDash([]);
+      }
+      ctx.fillStyle=col;ctx.font='bold 11px Noto Sans KR,sans-serif';ctx.textAlign='center';
+      ctx.fillText(hit?'닿음 ✓':'못 닿음 ✗',sx,S2_BAR_Y+20);
+    }
+  });
+
+  if(revealed.length===0){
+    ctx.fillStyle='rgba(255,255,255,0.22)';ctx.font='13px Noto Sans KR,sans-serif';ctx.textAlign='center';
+    ctx.fillText('👆 학생을 클릭하면 막대가 나타납니다',muX,H-14);
+  }
+}
+
+/* 클릭 처리 */
+function handleClick(e){
+  const cvs=document.getElementById('cvs2');
+  const rect=cvs.getBoundingClientRect();
+  const W=cvs.parentElement.clientWidth||700;
+  const cx=(e.clientX-rect.left)*(cvs.width/rect.width);
+  const cy=(e.clientY-rect.top)*(cvs.height/rect.height);
+  let clicked=-1;
+  STU_X_SORTED.forEach((pos,i)=>{
+    const sx=toX(pos,W);
+    if(Math.abs(cx-sx)<30&&Math.abs(cy-S2_STU_Y)<34) clicked=i;
+  });
+  if(clicked<0) return;
+  let blinkCount=0;
+  const iv=setInterval(()=>{
+    blinkCount++;
+    drawScene2(blinkCount%2===0?-1:clicked);
+    if(blinkCount>=6){
+      clearInterval(iv);
+      if(!revealed.includes(clicked)) revealed.push(clicked);
+      drawScene2(-1);
+      updateVerdict2();
+    }
+  },150);
+}
+
+function updateVerdict2(){
+  const hb=HB[curConf2];
+  const hitCount=revealed.filter(i=>Math.abs(STU_X_SORTED[i]-MU)<hb).length;
+  const total=revealed.length;
+  if(total===0){
+    document.getElementById('verdict2').textContent='학생을 클릭해보세요 👆';
+    document.getElementById('verdict2').style.color='var(--text2)';
+    return;
+  }
+  const lastI=revealed[revealed.length-1];
+  const lastHit=Math.abs(STU_X_SORTED[lastI]-MU)<hb;
+  document.getElementById('verdict2').style.color=lastHit?'#1abc9c':'#f85149';
+  document.getElementById('verdict2').textContent=
+    `${total}명 확인 — μ에 닿은 막대: ${hitCount}개 / ${total}개`;
+}
+
+function setConf(conf){
+  curConf=conf;
+  document.querySelectorAll('#confBtns .conf-btn').forEach(b=>{
+    b.classList.toggle('active',b.textContent.includes(conf+'%'));
+  });
+  drawScene1();
+}
+function setConf2(conf){
+  curConf2=conf;
+  document.querySelectorAll('#confBtns2 .conf-btn').forEach(b=>{
+    b.classList.toggle('active',b.textContent.includes(conf+'%'));
+  });
+  revealed=[];
+  drawScene2(-1);
+  document.getElementById('verdict2').textContent='학생을 클릭해보세요 👆';
+  document.getElementById('verdict2').style.color='var(--text2)';
+}
+
+function showAll(){
+  const hb=HB[curConf2];
+  // miss(빨간)를 나중에 그려서 위에 표시되도록: hit 먼저, miss 나중
+  const hits=[0,1,2,3,4,5,6,7,8,9].filter(i=>Math.abs(STU_X_SORTED[i]-MU)<hb);
+  const misses=[0,1,2,3,4,5,6,7,8,9].filter(i=>Math.abs(STU_X_SORTED[i]-MU)>=hb);
+  revealed=[...hits,...misses];
+  drawScene2(-1);
+  const hitCount=hits.length;
+  document.getElementById('verdict2').style.color=hitCount>=8?'#1abc9c':hitCount>=6?'#e3b341':'#f85149';
+  document.getElementById('verdict2').textContent=
+    `전체 10명 — 신뢰수준 ${curConf2}% → ${hitCount}명의 막대가 μ에 닿음`;
+}
+
+function resetAll(){
+  revealed=[];
+  drawScene2(-1);
+  document.getElementById('verdict2').textContent='학생을 클릭해보세요 👆';
+  document.getElementById('verdict2').style.color='var(--text2)';
+}
+
+
+/* ============================================================
+   TAB 2: 표집분포
+   ============================================================ */
+let distData=[], autoTimerDist=null;
+let curConfDist=95;
+let HBAR_DIST=1.96*SE; // 신뢰수준에 따라 동적으로 변경
+const Z_TABLE={90:1.645,95:1.960,99:2.576};
+
+function drawDistSVG(){
+  const svg=document.getElementById('svgDist');
+  svg.innerHTML='';
+  const W=svg.clientWidth||700,topH=155,botH=150,H=topH+botH+10,pL=50,pR=30;
+  setSVG(svg,W,H);
+  const mu=MU,se=SE;
+  const xminD=mu-4.8*se,xmaxD=mu+4.8*se;
+  const xs=linspace(xminD,xmaxD,400);
+  const peak=nPDF(mu,mu,se);
+  const baseY=topH;
+  const toXd=v=>pL+(v-xminD)/(xmaxD-xminD)*(W-pL-pR);
+  const toY=v=>baseY-v/peak*(topH-18);
+  const muX=toXd(mu);
+  const bgD='M'+toXd(xs[0]).toFixed(1)+','+baseY+' '+xs.map(x=>toXd(x).toFixed(1)+','+toY(nPDF(x,mu,se)).toFixed(1)).join(' L')+' L'+toXd(xs[xs.length-1]).toFixed(1)+','+baseY+' Z';
+  svg.appendChild(S('path',{d:bgD,fill:'rgba(88,166,255,0.08)',stroke:'none'}));
+  const ins95=xs.filter(x=>x>=mu-HBAR_DIST&&x<=mu+HBAR_DIST);
+  if(ins95.length>1){
+    const sd='M'+toXd(ins95[0]).toFixed(1)+','+baseY+' '+ins95.map(x=>toXd(x).toFixed(1)+','+toY(nPDF(x,mu,se)).toFixed(1)).join(' L')+' L'+toXd(ins95[ins95.length-1]).toFixed(1)+','+baseY+' Z';
+    svg.appendChild(S('path',{d:sd,fill:'rgba(26,188,156,0.18)',stroke:'none'}));
+    svg.appendChild(S('text',{x:muX,y:baseY-65,'text-anchor':'middle',fill:'#1abc9c','font-size':'15','font-weight':'700','font-family':'JetBrains Mono,monospace'},curConfDist+'%'));
+  }
+  svg.appendChild(S('path',{d:'M'+xs.map(x=>toXd(x).toFixed(1)+','+toY(nPDF(x,mu,se)).toFixed(1)).join(' L'),fill:'none',stroke:'#58a6ff','stroke-width':'2'}));
+  svg.appendChild(S('line',{x1:pL,y1:baseY,x2:W-pR,y2:baseY,stroke:'rgba(255,255,255,0.1)','stroke-width':'1'}));
+  svg.appendChild(S('line',{x1:muX,y1:0,x2:muX,y2:H,stroke:'#e3b341','stroke-width':'1.5','stroke-dasharray':'4,3'}));
+  svg.appendChild(S('text',{x:muX,y:baseY+13,'text-anchor':'middle',fill:'#e3b341','font-size':'11','font-weight':'600','font-family':'JetBrains Mono,monospace'},'μ=170'));
+  svg.appendChild(S('text',{x:pL+8,y:14,fill:'#58a6ff','font-size':'11','font-family':'Noto Sans KR,sans-serif'},'표집분포 (표본평균들의 분포)'));
+  svg.appendChild(S('line',{x1:pL,y1:topH+8,x2:W-pR,y2:topH+8,stroke:'rgba(255,255,255,0.05)','stroke-width':'1'}));
+  svg.appendChild(S('text',{x:pL+8,y:topH+22,fill:'rgba(255,255,255,0.15)','font-size':'11','font-family':'Noto Sans KR,sans-serif'},`↓ 각 표본의 ${curConfDist}% 신뢰구간`));
+  const show=distData.slice(-16);
+  const rH=Math.min((botH-28)/Math.max(show.length,1),22);
+  show.forEach((d,i)=>{
+    const y=topH+26+i*rH+rH/2;
+    const col=d.hit?'#1abc9c':'#f85149';
+    const cx=toXd(d.xbar),lo=toXd(d.lo),hi=toXd(d.hi);
+    svg.appendChild(S('line',{x1:lo,y1:y,x2:hi,y2:y,stroke:col,'stroke-width':'2.5','stroke-linecap':'round'}));
+    svg.appendChild(S('circle',{cx,cy:y,r:'3',fill:'#e6edf3'}));
+    svg.appendChild(S('text',{x:pL-4,y:y+4,'text-anchor':'end',fill:col,'font-size':'9','font-family':'JetBrains Mono,monospace'},String(distData.length-show.length+i+1)));
+  });
+}
+
+function addDist(){
+  const xbar=MU+SE*randn();
+  const lo=xbar-HBAR_DIST,hi=xbar+HBAR_DIST,hit=lo<=MU&&MU<=hi;
+  distData.push({xbar,lo,hi,hit});
+  const n=distData.length,nhit=distData.filter(d=>d.hit).length;
+  document.getElementById('distTotal').textContent=n;
+  document.getElementById('distHit').textContent=nhit;
+  document.getElementById('distRate').textContent=`${(nhit/n*100).toFixed(1)}%`;
+  const msg=document.getElementById('msgDist');
+  msg.style.color=hit?'#1abc9c':'#f85149';
+  msg.textContent=hit?`✓ ${n}번째 (표본평균=${xbar.toFixed(2)}): μ 포함 → ${nhit}/${n} = ${(nhit/n*100).toFixed(1)}%`:`✗ ${n}번째 (표본평균=${xbar.toFixed(2)}): μ 미포함 → ${nhit}/${n} = ${(nhit/n*100).toFixed(1)}%`;
+  updateDistNote(n, nhit);
+  drawDistSVG();
+}
+
+function updateDistNote(n, nhit){
+  const note=document.getElementById('distNote');
+  if(n<10){note.style.display='none';return;}
+  note.style.display='block';
+  const rate=(nhit/n*100).toFixed(1);
+  const diff=Math.abs(nhit/n*100-curConfDist).toFixed(1);
+  let msg=`현재 ${n}개 중 ${nhit}개 포함 (<strong style="color:#e6edf3;">${rate}%</strong>). 이론값은 <strong style="color:#1abc9c;">${curConfDist}%</strong>입니다.<br>`;
+  if(n<100) msg+=`표본 수가 적을수록 이론값과 차이가 납니다. 더 추가해보세요!`;
+  else if(n<500) msg+=`이론값과의 차이: ${diff}%p. 1,000개 추가 버튼을 눌러 수렴을 확인해보세요.`;
+  else msg+=`시행 횟수가 늘어날수록 이론값(${curConfDist}%)에 수렴합니다. 현재 차이: ${diff}%p`;
+  note.innerHTML=msg;
+}
+
+function addBulk(count){
+  if(autoTimerDist){clearInterval(autoTimerDist);autoTimerDist=null;
+    document.getElementById('btnAutoDist').textContent='▶ 자동';
+    document.getElementById('btnAutoDist').classList.remove('primary');}
+  for(let i=0;i<count;i++){
+    const xbar=MU+SE*randn();
+    const lo=xbar-HBAR_DIST,hi=xbar+HBAR_DIST,hit=lo<=MU&&MU<=hi;
+    distData.push({xbar,lo,hi,hit});
+  }
+  const n=distData.length,nhit=distData.filter(d=>d.hit).length;
+  document.getElementById('distTotal').textContent=n;
+  document.getElementById('distHit').textContent=nhit;
+  document.getElementById('distRate').textContent=`${(nhit/n*100).toFixed(1)}%`;
+  const msg=document.getElementById('msgDist');
+  msg.style.color='#1abc9c';
+  msg.textContent=`${count.toLocaleString()}개 추가 완료 → 총 ${n}개 중 ${nhit}개 포함 (${(nhit/n*100).toFixed(1)}%)`;
+  updateDistNote(n,nhit);
+  drawDistSVG();
+}
+function toggleAutoDist(){
+  const btn=document.getElementById('btnAutoDist');
+  if(autoTimerDist){clearInterval(autoTimerDist);autoTimerDist=null;btn.textContent='▶ 자동';btn.classList.remove('primary');}
+  else{btn.textContent='⏹ 정지';btn.classList.add('primary');autoTimerDist=setInterval(()=>{if(distData.length>=100){clearInterval(autoTimerDist);autoTimerDist=null;btn.textContent='▶ 자동';btn.classList.remove('primary');return;}addDist();},200);}
+}
+function setConfDist(conf){
+  curConfDist=conf;
+  HBAR_DIST=Z_TABLE[conf]*SE;
+  document.querySelectorAll('#confBtnsDist .conf-btn').forEach(b=>{
+    b.classList.toggle('active',b.textContent.includes(conf+'%'));
+  });
+  document.getElementById('distLabel').textContent=
+    `μ=170, σ=20, n=100 → 표준오차=2 | z=${Z_TABLE[conf].toFixed(3)}`;
+  distData=[];
+  ['distTotal','distHit'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('distRate').textContent='—';
+  document.getElementById('msgDist').textContent='▶ 버튼을 눌러 표본을 추가해보세요';
+  document.getElementById('msgDist').style.color='var(--text2)';
+  document.getElementById('distNote').style.display='none';
+  if(autoTimerDist){clearInterval(autoTimerDist);autoTimerDist=null;
+    document.getElementById('btnAutoDist').textContent='▶ 자동';
+    document.getElementById('btnAutoDist').classList.remove('primary');}
+  drawDistSVG();
+}
+function resetDist(){
+  if(autoTimerDist){clearInterval(autoTimerDist);autoTimerDist=null;}
+  document.getElementById('btnAutoDist').textContent='▶ 자동';
+  document.getElementById('btnAutoDist').classList.remove('primary');
+  distData=[];
+  ['distTotal','distHit'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('distRate').textContent='—';
+  document.getElementById('msgDist').textContent='▶ 버튼을 눌러 표본을 추가해보세요';
+  document.getElementById('msgDist').style.color='var(--text2)';
+  document.getElementById('distNote').style.display='none';
+  drawDistSVG();
+}
+
+/* ============================================================
+   TAB 3
+   ============================================================ */
+// 탭3 상태: 현재 표본평균 (랜덤 뽑기용)
+let ciOffset = 0; // 표본평균이 μ에서 떨어진 거리 (SE 단위, N(0,1))
+
+function resampleCI(){
+  // 표본을 뽑을 때마다 표본평균이 분포 위 다른 위치에 나타남
+  // ciOffset = 표본평균이 μ에서 얼마나 떨어졌는지 (SE 단위의 랜덤값)
+  let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+  ciOffset = Math.sqrt(-2*Math.log(u)) * Math.cos(2*Math.PI*v); // N(0,1)
+  calcCI();
+}
+
+function calcCI(){
+  const xbarLabel=+document.getElementById('xbar').value||170; // 사용자가 관측한 표본평균 (항상 이 값으로 레이블)
+  const sigma=Math.max(0.01,+document.getElementById('sigma').value||20);
+  const n=Math.max(1,Math.round(+document.getElementById('nn').value)||100);
+  const z=+document.getElementById('zLevel').value||1.96;
+  const sel=document.getElementById('zLevel');
+  const confLabel=sel.options[sel.selectedIndex].text;
+  const confPct=confLabel.replace('%','').trim();
+  const se=sigma/Math.sqrt(n);
+  const sqrtN=Math.sqrt(n);
+  const Ev=z*se;
+
+  // Step 1: z값
+  document.getElementById('ciConfLabel').textContent=confLabel;
+  document.getElementById('ciZval').textContent=z.toFixed(3);
+
+  // Step 2: σ/√n 분수 표기
+  document.getElementById('ciFracTop').textContent=`σ=${sigma}`;
+  document.getElementById('ciFracBot').textContent=`√${n}=${sqrtN.toFixed(2)}`;
+  document.getElementById('ciSEformula').textContent=`${sigma} / √${n} = ${sigma} / ${sqrtN.toFixed(2)}`;
+  document.getElementById('ciSEval').textContent=`= ${se.toFixed(4)}`;
+
+  // Step 3: 오차한계
+  document.getElementById('ciEformula').textContent=`${z.toFixed(3)} × ${se.toFixed(4)}`;
+  document.getElementById('ciEval').textContent=`= ${Ev.toFixed(4)}`;
+
+  // Step 4: 신뢰구간 — 레이블은 항상 사용자 입력값(xbarLabel)
+  const lo=xbarLabel-Ev, hi=xbarLabel+Ev;
+  // 히트 여부: ciOffset이 ±z 범위 안에 있으면 μ 포함 (표준화된 거리)
+  const hit=Math.abs(ciOffset)<=z;
+  document.getElementById('ciFormula').innerHTML=
+    `<span style="color:#58a6ff;font-weight:700;">x̄=${xbarLabel}</span> ± ` +
+    `<span style="color:#e3b341;font-weight:700;">${Ev.toFixed(4)}</span> = ` +
+    `[<span style="color:${hit?'#1abc9c':'#f85149'};font-weight:700;">${lo.toFixed(2)}</span>, ` +
+    `<span style="color:${hit?'#1abc9c':'#f85149'};font-weight:700;">${hi.toFixed(2)}</span>]` +
+    (hit?` &nbsp;<span style="color:#1abc9c;">✓ μ 포함</span>`:`&nbsp;<span style="color:#f85149;">✗ μ 미포함</span>`);
+
+  // 코멘트
+  document.getElementById('ciComment').innerHTML=
+    `내가 뽑은 표본평균(<strong style="color:#58a6ff;">${xbarLabel}</strong>)이 분포의 어느 위치에서 나온 건지는 알 수 없습니다.<br>` +
+    `이 표본평균이 들고 있는 ${confLabel} 신뢰구간 ` +
+    `<strong style="color:${hit?'#1abc9c':'#f85149'};">[${lo.toFixed(2)}, ${hi.toFixed(2)}]</strong> 안에 ` +
+    `모평균이 포함된다고 <strong style="color:#f85149;">장담할 수 없습니다</strong>.<br>` +
+    `하지만 이런 과정을 100번 반복하면, 약 <strong style="color:#1abc9c;">${confPct}번</strong>은 ` +
+    `해당 구간 안에 모평균이 포함됩니다.`;
+
+  drawCIsvg(xbarLabel,ciOffset,sigma,n,z,lo,hi,se,hit);
+}
+function drawCIsvg(xbarLabel,offset,sigma,n,z,lo,hi,se,hit){
+  const svg=document.getElementById('svgCI');svg.innerHTML='';
+  // 그래프 범위: μ를 중심(0 기준), 표본평균은 offset*se만큼 떨어진 위치
+  // 화면 좌표: 중심=graphMu, 표본평균=graphMu+offset*se
+  const W=svg.clientWidth||700, H=380, pL=60, pR=30, bp=90;
+  setSVG(svg,W,H);
+
+  const graphMu=0;              // 그래프 좌표계에서 μ 위치 (0으로 정규화)
+  const graphXbar=offset*se;    // 표본평균의 그래프 좌표
+  const xminC=graphMu-4.5*se, xmaxC=graphMu+4.5*se;
+  const xs=linspace(xminC,xmaxC,500);
+  const peak=nPDF(graphMu,graphMu,se);
+  const baseY=H-bp;
+  const toXc=v=>pL+(v-xminC)/(xmaxC-xminC)*(W-pL-pR);
+  const toY=v=>baseY-v/peak*(H-bp-20);
+  const muX=toXc(graphMu);
+  const xbarX=toXc(graphXbar);
+  const confLabel=document.getElementById('zLevel').options[document.getElementById('zLevel').selectedIndex].text;
+
+  /* 배경 */
+  const bgD='M'+toXc(xs[0]).toFixed(1)+','+baseY+' '+xs.map(x=>toXc(x).toFixed(1)+','+toY(nPDF(x,graphMu,se)).toFixed(1)).join(' L')+' L'+toXc(xs[xs.length-1]).toFixed(1)+','+baseY+' Z';
+  svg.appendChild(S('path',{d:bgD,fill:'rgba(26,188,156,0.05)',stroke:'none'}));
+
+  /* μ 기준 ±z*se 음영 (선생님 막대 영역) */
+  const muLo=graphMu-z*se, muHi=graphMu+z*se;
+  const insZ=xs.filter(x=>x>=muLo&&x<=muHi);
+  if(insZ.length>1){
+    const sdZ='M'+toXc(insZ[0]).toFixed(1)+','+baseY+' '+insZ.map(x=>toXc(x).toFixed(1)+','+toY(nPDF(x,graphMu,se)).toFixed(1)).join(' L')+' L'+toXc(insZ[insZ.length-1]).toFixed(1)+','+baseY+' Z';
+    svg.appendChild(S('path',{d:sdZ,fill:'rgba(26,188,156,0.20)',stroke:'none'}));
+    const midZy=toY(nPDF(graphMu,graphMu,se)*0.5);
+    svg.appendChild(S('rect',{x:muX-28,y:midZy-13,width:56,height:26,rx:5,fill:'rgba(13,17,23,0.82)'}));
+    svg.appendChild(S('text',{x:muX,y:midZy+5,'text-anchor':'middle','dominant-baseline':'middle',fill:'#1abc9c','font-size':'14','font-weight':'700','font-family':'JetBrains Mono,monospace'},confLabel));
+  }
+
+  /* 곡선 */
+  svg.appendChild(S('path',{d:'M'+xs.map(x=>toXc(x).toFixed(1)+','+toY(nPDF(x,graphMu,se)).toFixed(1)).join(' L'),fill:'none',stroke:'#1abc9c','stroke-width':'2.2'}));
+
+  /* 기준선 */
+  svg.appendChild(S('line',{x1:pL,y1:baseY,x2:W-pR,y2:baseY,stroke:'rgba(255,255,255,0.1)','stroke-width':'1'}));
+
+  /* μ 수직선 */
+  svg.appendChild(S('line',{x1:muX,y1:4,x2:muX,y2:baseY,stroke:'#e3b341','stroke-width':'2','stroke-dasharray':'5,3'}));
+
+  /* ── 선생님 막대 (μ 기준) ── */
+  const BAR1_Y=baseY+20;
+  const bL1=toXc(muLo), bR1=toXc(muHi);
+  svg.appendChild(S('rect',{x:bL1,y:BAR1_Y-9,width:bR1-bL1,height:18,rx:9,fill:'rgba(227,179,65,0.18)',stroke:'#e3b341','stroke-width':'2'}));
+  [bL1,bR1].forEach(bx=>svg.appendChild(S('line',{x1:bx,y1:BAR1_Y-16,x2:bx,y2:BAR1_Y+16,stroke:'#e3b341','stroke-width':'2'})));
+  svg.appendChild(S('text',{x:muX,y:BAR1_Y-18,'text-anchor':'middle',fill:'#e3b341','font-size':'11','font-family':'Noto Sans KR,sans-serif'},'👨‍🏫 μ (모평균, 위치 모름)'));
+  svg.appendChild(S('text',{x:muX,y:BAR1_Y+28,'text-anchor':'middle',fill:'#e3b341','font-size':'10','font-weight':'600','font-family':'JetBrains Mono,monospace'},'μ'));
+
+  /* ── 표본평균 수직선 ── */
+  svg.appendChild(S('line',{x1:xbarX,y1:toY(nPDF(graphXbar,graphMu,se)),x2:xbarX,y2:baseY,stroke:'#58a6ff','stroke-width':'2'}));
+
+  /* ── 학생 막대 (표본평균 기준, 레이블은 항상 xbarLabel) ── */
+  const BAR2_Y=baseY+55;
+  const barHalfPx=z*se/(xmaxC-xminC)*(W-pL-pR);
+  const bL2=xbarX-barHalfPx, bR2=xbarX+barHalfPx;
+  const barCol=hit?'#1abc9c':'#f85149';
+  svg.appendChild(S('rect',{x:bL2,y:BAR2_Y-9,width:bR2-bL2,height:18,rx:9,fill:hit?'rgba(26,188,156,0.18)':'rgba(248,81,73,0.18)',stroke:barCol,'stroke-width':'2.5'}));
+  [bL2,bR2].forEach(bx=>svg.appendChild(S('line',{x1:bx,y1:BAR2_Y-16,x2:bx,y2:BAR2_Y+16,stroke:barCol,'stroke-width':'2'})));
+  /* 막대 가운데 레이블: 항상 xbarLabel */
+  svg.appendChild(S('text',{x:xbarX,y:BAR2_Y-18,'text-anchor':'middle',fill:'#58a6ff','font-size':'11','font-family':'Noto Sans KR,sans-serif'},'🧑‍🎓 표본평균'));
+  svg.appendChild(S('text',{x:xbarX,y:BAR2_Y+28,'text-anchor':'middle',fill:'#58a6ff','font-size':'12','font-weight':'700','font-family':'JetBrains Mono,monospace'},`x̄=${xbarLabel}`));
+
+  /* μ 교차 판정 */
+  if(hit){
+    svg.appendChild(S('circle',{cx:muX,cy:BAR2_Y,r:'7',fill:'#1abc9c'}));
+    svg.appendChild(S('text',{x:muX,y:BAR2_Y+5,'text-anchor':'middle',fill:'#0d1117','font-size':'11','font-weight':'700'},'✓'));
+  } else {
+    const gapX=graphXbar<graphMu?[bR2,muX]:[muX,bL2];
+    svg.appendChild(S('line',{x1:gapX[0],y1:BAR2_Y,x2:gapX[1],y2:BAR2_Y,stroke:'rgba(248,81,73,0.5)','stroke-width':'1.5','stroke-dasharray':'4,4'}));
+  }
+}
+/* ── 너비 결정 요인 상태 ── */
+let wCurN=100, wCurC=95, wCurS=10;
+
+function setWN(n){
+  wCurN=n;
+  document.querySelectorAll('#wNbtns .conf-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(`n = ${n}`)));
+  drawAllWidth();
+}
+function setWC(c){
+  wCurC=c;
+  document.querySelectorAll('#wCbtns .conf-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(`${c}%`)));
+  drawAllWidth();
+}
+function setWS(s){
+  wCurS=s;
+  document.querySelectorAll('#wSbtns .conf-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(`σ = ${s}`)));
+  drawAllWidth();
+}
+
+function updateWidth(){ drawAllWidth(); }
+
+function drawAllWidth(){
+  // ① 표본 크기 비교 (신뢰수준 95%, σ=10 고정)
+  const nItems=[
+    {label:'n = 25 (1/4배)', n:25,  col:'#f85149'},
+    {label:'n = 50 (1/2배)', n:50,  col:'#e3b341'},
+    {label:'n = 100 (기준)', n:100, col:'#1abc9c'},
+    {label:'n = 200 (2배)',  n:200, col:'#58a6ff'},
+    {label:'n = 400 (4배)',  n:400, col:'#8b5cf6'},
+  ];
+  drawBarChart('svgWN', nItems.map(d=>({
+    label:d.label, Ev:1.96*10/Math.sqrt(d.n), col:d.col,
+    active:d.n===wCurN
+  })));
+
+  // ② 신뢰수준 비교 (n=100, σ=10 고정)
+  const cItems=[
+    {label:'신뢰수준 90%', c:90, col:'#e3b341'},
+    {label:'신뢰수준 95%', c:95, col:'#1abc9c'},
+    {label:'신뢰수준 99%', c:99, col:'#58a6ff'},
+  ];
+  drawBarChart('svgWC', cItems.map(d=>({
+    label:d.label, Ev:confToZ(d.c)*10/Math.sqrt(100), col:d.col,
+    active:d.c===wCurC
+  })));
+
+  // ③ 모표준편차 비교 (n=100, 신뢰수준 95% 고정)
+  const sItems=[
+    {label:'σ = 5 (1/2배)',  s:5,  col:'#e3b341'},
+    {label:'σ = 10 (기준)',  s:10, col:'#1abc9c'},
+    {label:'σ = 20 (2배)',   s:20, col:'#f85149'},
+  ];
+  drawBarChart('svgWS', sItems.map(d=>({
+    label:d.label, Ev:1.96*d.s/Math.sqrt(100), col:d.col,
+    active:d.s===wCurS
+  })));
+}
+
+function drawBarChart(svgId, items){
+  const svg=document.getElementById(svgId);
+  if(!svg) return;
+  svg.innerHTML='';
+  const W=svg.clientWidth||700;
+  const rowH=46, H=items.length*rowH+16, pL=160, pR=90;
+  setSVG(svg,W,H);
+  const maxE=Math.max(...items.map(d=>d.Ev),0.001);
+  items.forEach((item,i)=>{
+    const y=i*rowH+rowH/2+6;
+    const bw=Math.max(4,(item.Ev/maxE)*(W-pL-pR));
+    const col=item.col;
+    const alpha=item.active?'ff':'66';
+    const lw=item.active?2.5:1;
+    // 레이블
+    svg.appendChild(S('text',{x:pL-10,y:y+5,'text-anchor':'end',
+      fill:item.active?'#e6edf3':'#8b949e',
+      'font-size':'13','font-weight':item.active?'600':'400',
+      'font-family':'Noto Sans KR,sans-serif'},item.label));
+    // 막대
+    svg.appendChild(S('rect',{x:pL,y:y-14,width:bw,height:28,rx:7,fill:col+'28'}));
+    svg.appendChild(S('rect',{x:pL,y:y-14,width:bw,height:28,rx:7,fill:'none',stroke:col,'stroke-width':lw}));
+    // 값
+    svg.appendChild(S('text',{x:pL+bw+10,y:y+5,fill:col,
+      'font-size':'13','font-weight':'700','font-family':'JetBrains Mono,monospace'},
+      `±${item.Ev.toFixed(3)}`));
+  });
+}
+
+/* === 탭 전환 === */
+function switchTab(idx){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  if(idx===0) setTimeout(()=>{drawScene1();drawScene2(-1);},60);
+  if(idx===1) setTimeout(drawDistSVG,60);
+  if(idx===2) setTimeout(()=>{calcCI();drawAllWidth();},60);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  drawScene1();
+  drawScene2(-1);
+  drawDistSVG();
+  calcCI();
+  updateWidth();
+});
+window.addEventListener('resize',()=>{
+  const i=[...document.querySelectorAll('.panel')].findIndex(p=>p.classList.contains('active'));
+  if(i===0){drawScene1();drawScene2(-1);}
+  if(i===1) drawDistSVG();
+  if(i===2){calcCI();drawAllWidth();}
+});
+
+
+/* ══ 드로잉 엔진 ══ */
+(function(){
+  const cvs=document.getElementById('drawCanvas');
+  const ctx=cvs.getContext('2d');
+  let drawing=false, penOn=false, eraser=false, highlight=false;
+  let color='#f85149', size=3;
+  let lastX=0, lastY=0;
+  let savedImage=null, resizeTimer=null;
+
+  function getFullH(){
+    return Math.max(document.body.scrollHeight, document.body.offsetHeight,
+      document.documentElement.scrollHeight, document.documentElement.offsetHeight);
+  }
+  function resize(){
+    const w=window.innerWidth, h=getFullH();
+    if(cvs.width===w && cvs.height===h) return;
+    if(cvs.width>0&&cvs.height>0) savedImage=ctx.getImageData(0,0,cvs.width,cvs.height);
+    cvs.width=w; cvs.height=h;
+    if(savedImage) try{ctx.putImageData(savedImage,0,0);}catch(e){}
+  }
+  resize();
+  window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(resize,200);});
+  new MutationObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(resize,150);})
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+
+  function pos(e){
+    const t=e.touches?e.touches[0]:e;
+    return [t.clientX, t.clientY+window.scrollY];
+  }
+
+  cvs.addEventListener('mousedown',e=>{if(!penOn)return;drawing=true;[lastX,lastY]=pos(e);});
+  cvs.addEventListener('touchstart',e=>{if(!penOn)return;e.preventDefault();drawing=true;[lastX,lastY]=pos(e);},{passive:false});
+  cvs.addEventListener('mousemove',e=>{if(!drawing)return;draw(pos(e));});
+  cvs.addEventListener('touchmove',e=>{if(!drawing)return;e.preventDefault();draw(pos(e));},{passive:false});
+  ['mouseup','touchend','mouseleave'].forEach(ev=>cvs.addEventListener(ev,()=>drawing=false));
+
+  function draw([x,y]){
+    ctx.beginPath();
+    if(eraser){
+      ctx.globalCompositeOperation='destination-out';
+      ctx.globalAlpha=1;
+      ctx.arc(x,y,size*5,0,Math.PI*2);
+      ctx.fill();
+    } else {
+      ctx.globalCompositeOperation='source-over';
+      ctx.globalAlpha=highlight?0.35:1;
+      ctx.strokeStyle=color;
+      ctx.lineWidth=highlight?size*5:size;
+      ctx.lineCap='round';ctx.lineJoin='round';
+      ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();
+    }
+    [lastX,lastY]=[x,y];
+  }
+
+  function setStatus(txt,on){
+    const el=document.getElementById('dstatus');
+    el.textContent=txt;
+    el.style.color=on?'#1abc9c':'#8b949e';
+  }
+
+  window.toggleDraw=function(){
+    penOn=!penOn; eraser=false; highlight=false;
+    cvs.classList.toggle('active',penOn);
+    document.getElementById('dpenBtn').classList.toggle('on',penOn);
+    document.getElementById('deraserBtn').classList.remove('on');
+    document.getElementById('dhighBtn').classList.remove('on');
+    setStatus(penOn?'ON':'OFF', penOn);
+  };
+  window.toggleEraser=function(){
+    if(!penOn) toggleDraw();
+    eraser=!eraser; highlight=false;
+    document.getElementById('deraserBtn').classList.toggle('on',eraser);
+    document.getElementById('dhighBtn').classList.remove('on');
+    setStatus(eraser?'지우개':'ON', true);
+  };
+  window.toggleHighlight=function(){
+    if(!penOn) toggleDraw();
+    highlight=!highlight; eraser=false;
+    document.getElementById('dhighBtn').classList.toggle('on',highlight);
+    document.getElementById('deraserBtn').classList.remove('on');
+    setStatus(highlight?'형광펜':'ON', true);
+  };
+  window.setDColor=function(el,c){
+    color=c;
+    document.querySelectorAll('.dcolor').forEach(d=>d.classList.remove('selected'));
+    el.classList.add('selected');
+    eraser=false; highlight=false;
+    document.getElementById('deraserBtn').classList.remove('on');
+    document.getElementById('dhighBtn').classList.remove('on');
+  };
+  window.setDSize=function(el,s){
+    size=s;
+    document.querySelectorAll('.dsize').forEach(d=>d.classList.remove('selected'));
+    el.querySelector('.dsize').classList.add('selected');
+  };
+  window.clearDraw=function(){
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    savedImage=null;
+  };
+
+  /* 우클릭 → 펜 ON/OFF */
+  document.addEventListener('contextmenu',e=>{
+    e.preventDefault();
+    toggleDraw();
+  });
+  /* 키보드 단축키 */
+  document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+    if(e.key==='d'||e.key==='D') toggleDraw();
+    if(e.key==='c'||e.key==='C') clearDraw();
+    if(e.key==='Escape'&&penOn) toggleDraw();
+  });
+})();
+
+</script>
+</body>
+</html>

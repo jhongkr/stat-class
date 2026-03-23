@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLT simulation</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #F4F7FB; color: #1E2A3A; min-height: 100vh; }
+
+  header { background: #1E2A3A; color: #fff; padding: 1.2rem 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  header h1 { font-size: 1.4rem; font-weight: 600; }
+  header p { font-size: 0.85rem; color: #7090B0; margin-left: auto; }
+  .header-badge {
+    background: rgba(26,188,156,0.15);
+    border: 1px solid #0e8f72;
+    color: #1abc9c;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+
+  /* Controls */
+  .controls { background: #fff; border-radius: 12px; border: 0.5px solid #D8E4F0; padding: 1.2rem 1.5rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .btn { padding: 9px 20px; border-radius: 8px; border: 0.5px solid #C0D0E0; background: #fff; color: #1E2A3A; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .btn:hover { background: #F0F5FA; }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.38; cursor: default; transform: none; }
+  .btn.primary { background: #4472C4; color: #fff; border-color: #4472C4; }
+  .btn.primary:hover { background: #3260b0; }
+  .btn.danger { background: #fff; color: #C55A11; border-color: #E0A080; }
+  .btn.danger:hover { background: #FFF4EE; }
+  .preset-group { display: flex; gap: 6px; margin-left: auto; }
+  .speed-row { display: flex; align-items: center; gap: 8px; }
+  .speed-row label { font-size: 13px; color: #64748B; white-space: nowrap; }
+  input[type=range] { accent-color: #4472C4; cursor: pointer; }
+
+  /* Progress */
+  .progress-bar { height: 5px; background: #E0E8F0; border-radius: 3px; margin-bottom: 1.2rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #4472C4; border-radius: 3px; transition: width 0.15s; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.2rem; }
+  .stat { background: #fff; border: 0.5px solid #D8E4F0; border-radius: 10px; padding: 12px 16px; }
+  .stat-label { font-size: 12px; color: #64748B; margin-bottom: 5px; }
+  .stat-val { font-size: 22px; font-weight: 600; color: #1E2A3A; }
+  .stat-sub { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+  .stat.highlight .stat-val { color: #4472C4; }
+
+  /* Charts */
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.2rem; }
+  .chart-box { background: #fff; border: 0.5px solid #D8E4F0; border-radius: 12px; padding: 1.2rem; }
+  .chart-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .chart-title { font-size: 13px; font-weight: 600; color: #1E2A3A; }
+  .badge { display: inline-block; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 500; }
+  .badge-blue { background: #E6F1FB; color: #185FA5; }
+  .badge-green { background: #EAF3DE; color: #3B6D11; }
+  .badge-orange { background: #FFF0E0; color: #C55A11; }
+  .chart-wrap { position: relative; height: 220px; }
+
+  /* Explanation box */
+  .explain { background: #fff; border-radius: 12px; border: 0.5px solid #D8E4F0; padding: 1.2rem 1.5rem; }
+  .explain h2 { font-size: 15px; font-weight: 600; color: #1E2A3A; margin-bottom: 0.8rem; }
+  .explain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .explain-card { background: #F4F7FB; border-radius: 8px; padding: 12px 14px; }
+  .explain-card .num { font-size: 18px; font-weight: 700; color: #4472C4; margin-bottom: 4px; }
+  .explain-card p { font-size: 12px; color: #4A6080; line-height: 1.6; }
+
+  /* CLT formula */
+  .formula-box { background: #1E2A3A; border-radius: 10px; padding: 1rem 1.5rem; margin-top: 1rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+  .formula-box .f-label { font-size: 12px; color: #7090B0; }
+  .formula-box .f-val { font-size: 16px; font-weight: 600; color: #fff; margin-top: 2px; }
+  .formula-divider { width: 1px; height: 36px; background: #3A4A5A; }
+
+  @media (max-width: 700px) {
+    .stats { grid-template-columns: repeat(2,1fr); }
+    .charts { grid-template-columns: 1fr; }
+    .explain-grid { grid-template-columns: 1fr; }
+    .preset-group { margin-left: 0; }
+  }
+
+/* ── 드로잉 레이어 ── */
+#drawCanvas{position:absolute;top:0;left:0;width:100%;z-index:9999;pointer-events:none;cursor:crosshair;}
+#drawCanvas.active{pointer-events:all;}
+#drawToolbar{
+  position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:10000;
+  background:rgba(22,27,34,0.96);border:1px solid rgba(255,255,255,0.15);
+  border-radius:24px;padding:14px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);backdrop-filter:blur(12px);user-select:none;
+}
+.dtool-btn{width:36px;height:36px;border-radius:50%;border:2px solid transparent;
+  background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:17px;transition:all .15s;color:#e6edf3;}
+.dtool-btn:hover{background:rgba(255,255,255,0.1);}
+.dtool-btn.on{border-color:#1abc9c;background:rgba(26,188,156,0.2);}
+.dcolor{width:24px;height:24px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s;}
+.dcolor.selected{border-color:#fff;}
+.dsize-wrap{display:flex;align-items:center;justify-content:center;width:36px;height:28px;cursor:pointer;}
+.dsize{border-radius:3px;background:#e6edf3;transition:all .15s;}
+.dsize.selected{background:#1abc9c;}
+.dtool-sep{width:28px;height:1px;background:rgba(255,255,255,0.12);}
+</style>
+</head>
+<body>
+
+<canvas id="drawCanvas"></canvas>
+<div id="drawToolbar">
+  <button class="dtool-btn" id="dpenBtn" onclick="toggleDraw()" title="펜 ON/OFF — 우클릭 또는 D키">✏️</button>
+  <div class="dtool-sep"></div>
+  <div class="dcolor selected" style="background:#f85149;" onclick="setDColor(this,'#f85149')"></div>
+  <div class="dcolor" style="background:#e3b341;" onclick="setDColor(this,'#e3b341')"></div>
+  <div class="dcolor" style="background:#1abc9c;" onclick="setDColor(this,'#1abc9c')"></div>
+  <div class="dcolor" style="background:#58a6ff;" onclick="setDColor(this,'#58a6ff')"></div>
+  <div class="dcolor" style="background:#fff;" onclick="setDColor(this,'#fff')"></div>
+  <div class="dtool-sep"></div>
+  <div class="dsize-wrap" onclick="setDSize(this,3)" title="얇게"><div class="dsize selected" style="width:3px;height:22px;"></div></div>
+  <div class="dsize-wrap" onclick="setDSize(this,6)" title="보통"><div class="dsize" style="width:6px;height:22px;"></div></div>
+  <div class="dsize-wrap" onclick="setDSize(this,12)" title="굵게"><div class="dsize" style="width:12px;height:22px;"></div></div>
+  <div class="dtool-sep"></div>
+  <button class="dtool-btn" id="dhighBtn" onclick="toggleHighlight()" title="형광펜">🖍️</button>
+  <button class="dtool-btn" id="deraserBtn" onclick="toggleEraser()" title="지우개">🧹</button>
+  <button class="dtool-btn" onclick="clearDraw()" title="전체 지우기 (C키)">🗑️</button>
+  <div class="dtool-sep"></div>
+  <span style="font-size:10px;color:#8b949e;text-align:center;line-height:1.4;" id="dstatus">OFF</span>
+</div>
+
+
+<header>
+  <span class="header-badge">통계학 - Dr. Hong's Class</span>
+   <h1>중심극한정리 시뮬레이션</h1>
+  <p>모집단에서 n=100명을 반복 추출 → 표본평균의 분포가 정규분포로 수렴하는 과정</p>
+</header>
+
+<div class="container">
+
+  <div class="controls">
+    <button class="btn primary" id="btnRun">▶ 시뮬레이션 시작</button>
+    <button class="btn" id="btnStep" disabled>+1회 추가</button>
+    <button class="btn danger" id="btnReset">초기화</button>
+
+    <div class="speed-row">
+      <label>속도</label>
+      <input type="range" min="1" max="5" value="3" id="speedSlider" style="width:90px;">
+      <span id="speedLabel" style="font-size:13px;color:#64748B;min-width:60px;">보통</span>
+    </div>
+
+    <div class="preset-group">
+      <button class="btn" data-n="10">10회</button>
+      <button class="btn" data-n="100">100회</button>
+      <button class="btn" data-n="500">500회</button>
+      <button class="btn" data-n="1000">1,000회</button>
+    </div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">시뮬레이션 횟수</div>
+      <div class="stat-val" id="statN">0</div>
+      <div class="stat-sub">표본 추출 횟수</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">표본평균들의 평균</div>
+      <div class="stat-val" id="statMean">—</div>
+      <div class="stat-sub">이론값: 170.00 cm</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">표본평균들의 표준편차</div>
+      <div class="stat-val" id="statSE">—</div>
+      <div class="stat-sub">이론값: σ/√n = 1.00</div>
+    </div>
+    <div class="stat highlight">
+      <div class="stat-label">정규분포 적합도</div>
+      <div class="stat-val" id="statFit">—</div>
+      <div class="stat-sub">표본 수가 많을수록 ↑</div>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="chart-box">
+      <div class="chart-header">
+        <div class="chart-title">모집단 분포</div>
+        <span class="badge badge-blue">N(170, 10²)</span>
+        <span class="badge badge-blue">N = 100,000명</span>
+      </div>
+      <div class="chart-wrap"><canvas id="chartPop"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-header">
+        <div class="chart-title">표본평균의 분포</div>
+        <span class="badge badge-green">n = 100명</span>
+        <span class="badge badge-orange" id="badgeCount">0회 시뮬레이션</span>
+      </div>
+      <div class="chart-wrap"><canvas id="chartSample"></canvas></div>
+    </div>
+  </div>
+
+  <div class="explain">
+    <h2>중심극한정리란?</h2>
+    <div class="explain-grid">
+      <div class="explain-card">
+        <div class="num">①</div>
+        <p>모집단에서 크기 n인 표본을 무작위로 추출하고, 그 <strong>평균</strong>을 계산한다.</p>
+      </div>
+      <div class="explain-card">
+        <div class="num">②</div>
+        <p>이 과정을 수천 번 반복하면, 표본평균들의 분포는 <strong>정규분포</strong>에 수렴한다.</p>
+      </div>
+      <div class="explain-card">
+        <div class="num">③</div>
+        <p>이때 분포의 중심은 μ, 표준편차는 σ/√n이 된다. <strong>n이 클수록</strong> 더 빠르게 수렴!</p>
+      </div>
+    </div>
+    <div class="formula-box">
+      <div>
+        <div class="f-label">표본평균의 분포 (중심극한정리)</div>
+        <div class="f-val">x̄ ~ N(μ, σ²/n) = N(170, 10²/100) = N(170, 1²)</div>
+      </div>
+      <div class="formula-divider"></div>
+      <div>
+        <div class="f-label">표본평균의 표준편차</div>
+        <div class="f-val">σ/√n = 10/√100 = 1.00</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const POP_MEAN = 170, POP_STD = 10, SAMPLE_N = 100;
+const SPEED_LABELS = ['매우 느림','느림','보통','빠름','매우 빠름'];
+const SPEED_DELAYS = [500, 200, 80, 20, 0];
+const SPEED_BATCH  = [1, 1, 5, 25, 100];
+
+let sampleMeans = [];
+let running = false;
+
+function randn() {
+  let u=0, v=0;
+  while(u===0) u=Math.random();
+  while(v===0) v=Math.random();
+  return Math.sqrt(-2*Math.log(u)) * Math.cos(2*Math.PI*v);
+}
+function sampleOnce() {
+  let s=0;
+  for(let i=0;i<SAMPLE_N;i++) s += POP_MEAN + POP_STD*randn();
+  return s/SAMPLE_N;
+}
+function gaussPDF(x, mu, sigma) {
+  return Math.exp(-0.5*((x-mu)/sigma)**2) / (sigma*Math.sqrt(2*Math.PI));
+}
+function makeHistogram(data, bins, xMin, xMax) {
+  const w = (xMax-xMin)/bins;
+  const counts = new Array(bins).fill(0);
+  data.forEach(v => { const i=Math.floor((v-xMin)/w); if(i>=0&&i<bins) counts[i]++; });
+  const labels = Array.from({length:bins}, (_,i) => (xMin+(i+0.5)*w).toFixed(2));
+  const density = counts.map(c => c/(data.length*w));
+  return {labels, density};
+}
+
+// 모집단 차트
+const popLabels = Array.from({length:81},(_,i)=>(130+i).toString());
+const popDensity = popLabels.map(x=>gaussPDF(parseFloat(x),POP_MEAN,POP_STD));
+
+const popChart = new Chart(document.getElementById('chartPop'), {
+  type:'bar',
+  data:{
+    labels: popLabels,
+    datasets:[
+      {type:'bar', data:popDensity, backgroundColor:'rgba(68,114,196,0.3)', borderColor:'rgba(68,114,196,0.5)', borderWidth:0.5, barPercentage:1, categoryPercentage:1},
+      {type:'line', data:popDensity, borderColor:'#1a3a8e', borderWidth:2.5, pointRadius:0, fill:false, tension:0.4}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false, animation:{duration:0},
+    plugins:{legend:{display:false}, tooltip:{enabled:false}},
+    scales:{
+      x:{ticks:{maxTicksLimit:7, font:{size:11}, callback:(_,i)=>i%10===0?popLabels[i]:''}, grid:{display:false}},
+      y:{ticks:{maxTicksLimit:4, font:{size:11}, callback:v=>v.toFixed(3)}, grid:{color:'rgba(0,0,0,0.05)'}}
+    }
+  }
+});
+
+// 표본평균 차트
+const sampleChart = new Chart(document.getElementById('chartSample'), {
+  type:'bar',
+  data:{labels:[], datasets:[
+    {type:'bar', data:[], backgroundColor:'rgba(112,172,71,0.4)', borderColor:'rgba(112,172,71,0.65)', borderWidth:0.5, barPercentage:1, categoryPercentage:1},
+    {type:'line', data:[], borderColor:'#1a3a3a', borderWidth:2.5, pointRadius:0, fill:false, tension:0.4}
+  ]},
+  options:{
+    responsive:true, maintainAspectRatio:false, animation:{duration:150},
+    plugins:{legend:{display:false}, tooltip:{enabled:false}},
+    scales:{
+      x:{ticks:{maxTicksLimit:7, font:{size:11}}, grid:{display:false}},
+      y:{ticks:{maxTicksLimit:4, font:{size:11}, callback:v=>v.toFixed(3)}, grid:{color:'rgba(0,0,0,0.05)'}}
+    }
+  }
+});
+
+function updateSampleChart() {
+  if(!sampleMeans.length) return;
+  const bins = Math.min(50, Math.max(5, Math.floor(Math.sqrt(sampleMeans.length)*2.2)));
+  const mn = Math.min(...sampleMeans), mx = Math.max(...sampleMeans);
+  const pad = 0.3;
+  const {labels, density} = makeHistogram(sampleMeans, bins, mn-pad, mx+pad);
+  const mu = sampleMeans.reduce((a,b)=>a+b,0)/sampleMeans.length;
+  const variance = sampleMeans.reduce((a,b)=>a+(b-mu)**2,0)/sampleMeans.length;
+  const se = Math.sqrt(variance);
+  const curvePts = labels.map(x=>gaussPDF(parseFloat(x), mu, Math.max(se,0.01)));
+
+  sampleChart.data.labels = labels;
+  sampleChart.data.datasets[0].data = density;
+  sampleChart.data.datasets[1].data = curvePts;
+  sampleChart.update();
+
+  document.getElementById('statN').textContent = sampleMeans.length.toLocaleString();
+  document.getElementById('statMean').textContent = mu.toFixed(2)+'cm';
+  document.getElementById('statSE').textContent = se.toFixed(2);
+  document.getElementById('badgeCount').textContent = sampleMeans.length.toLocaleString()+'회 시뮬레이션';
+
+  // 정규분포 적합도 (표준오차가 이론값 1.00에 가까울수록 높음)
+  const n = sampleMeans.length;
+  let fit;
+  if(n < 10) fit = '수집 중...';
+  else if(n < 30) fit = '▲ 형성 중';
+  else if(n < 100) fit = '▲▲ 종 모양';
+  else if(n < 300) fit = '▲▲▲ 유사 정규';
+  else fit = '✓ 정규분포';
+  document.getElementById('statFit').textContent = fit;
+
+  const pct = Math.min(n/1000*100, 100);
+  document.getElementById('progFill').style.width = pct+'%';
+}
+
+function getSpeed(){ return parseInt(document.getElementById('speedSlider').value); }
+
+async function runSimulation(target) {
+  running = true;
+  const btnRun = document.getElementById('btnRun');
+  btnRun.textContent = '⏹ 정지';
+  btnRun.classList.remove('primary');
+  setUIEnabled(false);
+
+  while(sampleMeans.length < target && running) {
+    const speed = getSpeed();
+    const delay = SPEED_DELAYS[speed-1];
+    const batch = SPEED_BATCH[speed-1];
+    for(let i=0;i<batch && sampleMeans.length<target;i++) sampleMeans.push(sampleOnce());
+    updateSampleChart();
+    if(delay>0) await new Promise(r=>setTimeout(r,delay));
+    else await new Promise(r=>requestAnimationFrame(r));
+  }
+  stopRun();
+}
+
+function stopRun() {
+  running = false;
+  const btnRun = document.getElementById('btnRun');
+  btnRun.textContent = '▶ 시뮬레이션 시작';
+  btnRun.classList.add('primary');
+  setUIEnabled(true);
+}
+
+function setUIEnabled(enabled) {
+  ['btnStep','btnReset'].forEach(id => document.getElementById(id).disabled = !enabled);
+  document.querySelectorAll('.preset-group .btn').forEach(b => b.disabled = !enabled);
+}
+
+document.getElementById('btnRun').addEventListener('click', () => {
+  if(running){ running=false; return; }
+  runSimulation(sampleMeans.length + 500);
+});
+
+document.getElementById('btnStep').addEventListener('click', () => {
+  sampleMeans.push(sampleOnce());
+  updateSampleChart();
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  running = false;
+  sampleMeans = [];
+  sampleChart.data.labels = [];
+  sampleChart.data.datasets.forEach(d=>d.data=[]);
+  sampleChart.update();
+  ['statN','statMean','statSE','statFit'].forEach(id=>{
+    document.getElementById(id).textContent = id==='statN'?'0':'—';
+  });
+  document.getElementById('badgeCount').textContent = '0회 시뮬레이션';
+  document.getElementById('progFill').style.width = '0%';
+  stopRun();
+  setUIEnabled(false);
+  document.getElementById('btnStep').disabled = false;
+});
+
+document.getElementById('speedSlider').addEventListener('input', e=>{
+  document.getElementById('speedLabel').textContent = SPEED_LABELS[e.target.value-1];
+});
+
+document.querySelectorAll('.preset-group .btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(running) return;
+    sampleMeans = [];
+    runSimulation(parseInt(btn.dataset.n));
+  });
+});
+
+/* ══ 드로잉 엔진 ══ */
+(function(){
+  const cvs=document.getElementById('drawCanvas');
+  const ctx=cvs.getContext('2d');
+  let drawing=false, penOn=false, eraser=false, highlight=false;
+  let color='#f85149', size=3;
+  let lastX=0, lastY=0;
+  let savedImage=null, resizeTimer=null;
+
+  function getFullH(){
+    return Math.max(document.body.scrollHeight,document.body.offsetHeight,
+      document.documentElement.scrollHeight,document.documentElement.offsetHeight);
+  }
+  function resize(){
+    const w=window.innerWidth, h=getFullH();
+    if(cvs.width===w&&cvs.height===h) return;
+    if(cvs.width>0&&cvs.height>0) savedImage=ctx.getImageData(0,0,cvs.width,cvs.height);
+    cvs.width=w; cvs.height=h;
+    if(savedImage) try{ctx.putImageData(savedImage,0,0);}catch(e){}
+  }
+  resize();
+  window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(resize,200);});
+  new MutationObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(resize,150);})
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+
+  function pos(e){
+    const t=e.touches?e.touches[0]:e;
+    return[t.clientX,t.clientY+window.scrollY];
+  }
+
+  cvs.addEventListener('mousedown',e=>{if(!penOn)return;drawing=true;[lastX,lastY]=pos(e);});
+  cvs.addEventListener('touchstart',e=>{if(!penOn)return;e.preventDefault();drawing=true;[lastX,lastY]=pos(e);},{passive:false});
+  cvs.addEventListener('mousemove',e=>{if(!drawing)return;draw(pos(e));});
+  cvs.addEventListener('touchmove',e=>{if(!drawing)return;e.preventDefault();draw(pos(e));},{passive:false});
+  ['mouseup','touchend','mouseleave'].forEach(ev=>cvs.addEventListener(ev,()=>drawing=false));
+
+  function draw([x,y]){
+    ctx.beginPath();
+    if(eraser){
+      ctx.globalCompositeOperation='destination-out';
+      ctx.globalAlpha=1;
+      ctx.arc(x,y,size*5,0,Math.PI*2);
+      ctx.fill();
+    } else {
+      ctx.globalCompositeOperation='source-over';
+      ctx.globalAlpha=highlight?0.35:1;
+      ctx.strokeStyle=color;
+      ctx.lineWidth=highlight?size*5:size;
+      ctx.lineCap='round';ctx.lineJoin='round';
+      ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();
+    }
+    [lastX,lastY]=[x,y];
+  }
+
+  function setStatus(txt,on){
+    const el=document.getElementById('dstatus');
+    el.textContent=txt;
+    el.style.color=on?'#1abc9c':'#8b949e';
+  }
+
+  window.toggleDraw=function(){
+    penOn=!penOn; eraser=false; highlight=false;
+    cvs.classList.toggle('active',penOn);
+    document.getElementById('dpenBtn').classList.toggle('on',penOn);
+    document.getElementById('deraserBtn').classList.remove('on');
+    document.getElementById('dhighBtn').classList.remove('on');
+    setStatus(penOn?'ON':'OFF',penOn);
+  };
+  window.toggleEraser=function(){
+    if(!penOn) toggleDraw();
+    eraser=!eraser; highlight=false;
+    document.getElementById('deraserBtn').classList.toggle('on',eraser);
+    document.getElementById('dhighBtn').classList.remove('on');
+    setStatus(eraser?'지우개':'ON',true);
+  };
+  window.toggleHighlight=function(){
+    if(!penOn) toggleDraw();
+    highlight=!highlight; eraser=false;
+    document.getElementById('dhighBtn').classList.toggle('on',highlight);
+    document.getElementById('deraserBtn').classList.remove('on');
+    setStatus(highlight?'형광펜':'ON',true);
+  };
+  window.setDColor=function(el,c){
+    color=c;
+    document.querySelectorAll('.dcolor').forEach(d=>d.classList.remove('selected'));
+    el.classList.add('selected');
+    eraser=false; highlight=false;
+    document.getElementById('deraserBtn').classList.remove('on');
+    document.getElementById('dhighBtn').classList.remove('on');
+  };
+  window.setDSize=function(el,s){
+    size=s;
+    document.querySelectorAll('.dsize').forEach(d=>d.classList.remove('selected'));
+    el.querySelector('.dsize').classList.add('selected');
+  };
+  window.clearDraw=function(){
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    savedImage=null;
+  };
+
+  /* 우클릭 → 펜 ON/OFF */
+  document.addEventListener('contextmenu',e=>{
+    e.preventDefault();
+    toggleDraw();
+  });
+  /* 키보드 단축키 */
+  document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+    if(e.key==='d'||e.key==='D') toggleDraw();
+    if(e.key==='c'||e.key==='C') clearDraw();
+    if(e.key==='Escape'&&penOn) toggleDraw();
+  });
+})();
+
+</script>
+</body>
+</html>
