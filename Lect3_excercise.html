@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>표본분포와 신뢰구간 — 연습문제</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #f5f4f0;
+  --surf:    #ffffff;
+  --bdr:     #e4e2db;
+  --bdr2:    #ccc9be;
+  --ink:     #1a1918;
+  --ink2:    #4a4844;
+  --ink3:    #8c8a84;
+  --blue:    #1d5491;
+  --blue-lt: #e8f0f9;
+  --blue-md: #4a7fbf;
+  --green:   #1a5c34;
+  --grn-lt:  #e6f3ec;
+  --grn-md:  #3a8c5c;
+  --amber:   #7a4f00;
+  --amb-lt:  #fdf4e0;
+  --red:     #b03020;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+  --sans: 'Noto Sans KR', sans-serif;
+  --r: 10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.7;padding-bottom:7rem}
+
+/* header */
+.hdr{background:var(--ink);color:#fff;padding:2.8rem 2rem 2.1rem;text-align:center}
+.hdr .tag{font-family:var(--mono);font-size:.67rem;letter-spacing:.16em;color:#9a9890;text-transform:uppercase;margin-bottom:.55rem}
+.hdr h1{font-size:1.45rem;font-weight:600;letter-spacing:-.025em;color:#f4f3ef;margin-bottom:.3rem}
+.hdr p{font-size:.77rem;color:#7a7870;font-family:var(--mono)}
+
+/* sticky nav */
+.nav{position:sticky;top:0;z-index:100;background:var(--surf);border-bottom:1px solid var(--bdr);padding:.6rem 1.8rem;display:flex;align-items:center;gap:.8rem}
+.dots{display:flex;gap:5px}
+.dot{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--bdr2);font-family:var(--mono);font-size:.69rem;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;background:var(--bg);user-select:none}
+.dot:hover{border-color:var(--blue-md);color:var(--blue)}
+.dot.active{border-color:var(--blue);background:var(--blue-lt);color:var(--blue);font-weight:500}
+.dot.done{border-color:var(--green);background:var(--grn-lt);color:var(--green)}
+.nav-ct{font-family:var(--mono);font-size:.71rem;color:var(--ink3);margin-left:auto}
+
+/* question blocks */
+.qs{max-width:740px;margin:0 auto;padding:0 1.6rem}
+.qblock{margin-top:3.2rem;padding-bottom:3rem;border-bottom:1px solid var(--bdr);opacity:.16;pointer-events:none;transition:opacity .45s ease}
+.qblock:last-child{border-bottom:none}
+.qblock.on{opacity:1;pointer-events:auto}
+
+.qmeta{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem}
+.qnum{font-family:var(--mono);font-size:.65rem;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase}
+.qbadge{font-size:.67rem;font-family:var(--mono);color:var(--blue);background:var(--blue-lt);padding:2px 9px;border-radius:20px;border:1px solid #c4d8f0}
+
+.qtext{font-size:.98rem;line-height:1.82;color:var(--ink);margin-bottom:1.2rem}
+.qtext strong{font-weight:600}
+.chip{display:inline-block;font-family:var(--mono);font-size:.81rem;background:var(--bg);border:1px solid var(--bdr2);border-radius:6px;padding:.28rem .7rem;color:var(--ink2);margin:.2rem 0}
+
+/* diagram */
+.dbox{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:1rem .6rem .5rem;margin-bottom:1.2rem;overflow:hidden}
+.dbox svg{display:block;width:100%;height:auto}
+
+/* button */
+.btn{font-family:var(--mono);font-size:.74rem;letter-spacing:.04em;padding:.52rem 1.35rem;border:1.5px solid var(--ink);border-radius:6px;background:transparent;color:var(--ink);cursor:pointer;transition:background .15s,color .15s}
+.btn:hover{background:var(--ink);color:#fff}
+.btn:disabled{opacity:.32;cursor:default;background:transparent;color:var(--ink)}
+
+/* solution */
+.sol{display:none;margin-top:1.2rem;border-radius:0 var(--r) var(--r) 0;border-left:3px solid var(--green);background:var(--grn-lt);padding:1.1rem 1.3rem;animation:fu .3s ease}
+.sol.show{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.sol-lbl{font-family:var(--mono);font-size:.61rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:.65rem}
+.step{display:flex;gap:.7rem;margin-bottom:.42rem;align-items:baseline;font-size:.9rem;line-height:1.76;color:#1a3d26}
+.step .ar{font-family:var(--mono);color:var(--grn-md);flex-shrink:0;font-size:.8rem;margin-top:2px}
+.ans{margin-top:.8rem;display:inline-block;font-family:var(--mono);font-size:.96rem;font-weight:500;color:var(--green);background:#fff;border:1.5px solid var(--grn-md);border-radius:7px;padding:.4rem .95rem}
+.note{margin-top:.8rem;font-size:.81rem;line-height:1.76;color:#1a3d26;border-top:1px solid #b0d8bc;padding-top:.62rem}
+.note2{margin-top:.85rem;font-size:.81rem;line-height:1.8;color:var(--amber);background:var(--amb-lt);border-left:3px solid #c08818;border-radius:0 7px 7px 0;padding:.72rem 1rem}
+.note2 strong{font-weight:600}
+
+/* ── Drawing toolbar ── */
+#drawCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9000;pointer-events:none;}
+#drawCanvas.active{pointer-events:all;cursor:crosshair;}
+#drawToolbar{
+  position:fixed;right:14px;top:50%;transform:translateY(-50%);
+  z-index:9999;
+  background:rgba(20,20,20,0.92);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:20px;
+  padding:12px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.4);
+  backdrop-filter:blur(8px);
+  user-select:none;
+}
+.dtb{width:34px;height:34px;border-radius:50%;border:2px solid transparent;
+  background:transparent;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;font-size:16px;color:#e8e6e0;transition:all .15s;}
+.dtb:hover{background:rgba(255,255,255,0.1);}
+.dtb.on{border-color:#4a9eff;background:rgba(74,158,255,0.2);}
+.dcol{width:22px;height:22px;border-radius:50%;cursor:pointer;
+  border:2.5px solid transparent;transition:border-color .15s;flex-shrink:0;}
+.dcol.sel{border-color:#fff;}
+.dsep{width:22px;height:1px;background:rgba(255,255,255,0.15);}
+
+/* answer labels hidden until revealed */
+.dbox .ans-lbl { display: none; }
+.dbox.revealed .ans-lbl { display: block; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="tag">강의 4 · 연습문제</div>
+  <h1>표본분포와 신뢰구간</h1>
+  <p>6문항 · 해설 보기를 눌러야 다음 문제로 이동</p>
+</div>
+
+<div class="nav">
+  <div class="dots" id="dots"></div>
+  <div class="nav-ct" id="nct">0 / 6 완료</div>
+</div>
+
+<div class="qs" id="qs"></div>
+
+<script>
+/* ── helpers ── */
+function npdf(x,mu,s){return Math.exp(-.5*((x-mu)/s)**2)/(s*Math.sqrt(2*Math.PI))}
+// ty maps PDF y-value to SVG y-coordinate using a FIXED pixel height for the peak
+// peakPx = how many pixels tall the bell should be (distance from baseline to apex)
+function makeTy(bY, peakPx){
+  return y => bY - y * peakPx;
+}
+// build a scaled ty: we normalise so that the peak of the curve = peakPx pixels
+function bellTy(mu, s, bY, peakPx){
+  const pk = npdf(mu, mu, s);   // peak of N(mu,s) at x=mu
+  return y => bY - (y / pk) * peakPx;
+}
+function npath(mu,s,a,b,steps,tx,ty){
+  let d='';
+  for(let i=0;i<=steps;i++){const x=a+(b-a)*i/steps;d+=(i===0?'M':'L')+tx(x).toFixed(1)+' '+ty(npdf(x,mu,s)).toFixed(1)+' '}
+  return d;
+}
+function shadeArea(mu,s,lo,hi,bY,tx,ty,steps=110){
+  let d=npath(mu,s,lo,hi,steps,tx,ty);
+  d+=` L${tx(hi).toFixed(1)} ${bY} L${tx(lo).toFixed(1)} ${bY} Z`;
+  return d;
+}
+function svgO(w,h){return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="font-family:'Noto Sans KR',sans-serif">`}
+function bline(w,bY,pL,pR){return `<line x1="${pL}" y1="${bY}" x2="${w-pR}" y2="${bY}" stroke="#d4d0c8" stroke-width="1"/>`}
+function vd(x,y1,y2,col='#1d5491'){return `<line x1="${x.toFixed(1)}" y1="${y1}" x2="${x.toFixed(1)}" y2="${y2}" stroke="${col}" stroke-width="1.2" stroke-dasharray="4,3"/>`}
+function tl(x,y,txt,anchor='middle',col='#8c8a84',w='normal',sz=11){return `<text x="${typeof x==='number'?x.toFixed(1):x}" y="${y}" text-anchor="${anchor}" font-size="${sz}" fill="${col}" font-weight="${w}">${txt}</text>`}
+
+// peakPx: fixed pixel height of the bell apex above baseline
+// topPad: guaranteed whitespace above the apex
+function atl(x,y,txt,anchor,col,w,sz){
+  // answer label - hidden until revealed
+  const base=tl(x,y,txt,anchor,col,w,sz);
+  return base.replace('<text ','<text class="ans-lbl" ');
+}
+function bellSetup(mu,s,xMin,xMax,w,h,pL=50,pR=14,peakPx=120,topPad=28){
+  const bY=h-36;                   // baseline near bottom
+  // sanity: if apex would go above topPad, shrink peakPx to fit
+  const safePeak=Math.min(peakPx, bY-topPad);
+  const tx=x=>pL+(x-xMin)/(xMax-xMin)*(w-pL-pR);
+  const ty=bellTy(mu,s,bY,safePeak);
+  return{tx,ty,bY};
+}
+
+/* ── Q1 ── */
+function drawQ1(){
+  const w=560,h=240,mu=170,s=15,xMin=122,xMax=218,pL=44,pR=14;
+  const{tx,ty,bY}=bellSetup(mu,s,xMin,xMax,w,h,pL,pR,160);
+  const[m1,p1]=[155,185];
+  const curve=npath(mu,s,xMin,xMax,300,tx,ty);
+  const mid=shadeArea(mu,s,m1,p1,bY,tx,ty);
+  const rt=shadeArea(mu,s,p1,xMax,bY,tx,ty,80);
+  const lt=shadeArea(mu,s,xMin,m1,bY,tx,ty,80);
+  const[xm,xp,x17]=[tx(m1),tx(p1),tx(170)];
+  return svgO(w,h)
+    +`<path d="${lt}" fill="#4a7fbf" opacity="0.15"/>`
+    +`<path d="${mid}" fill="#4a7fbf" opacity="0.30"/>`
+    +`<path d="${rt}" fill="#1d5491" opacity="0.55"/>`
+    +`<path d="${curve}" fill="none" stroke="#1a1918" stroke-width="1.6"/>`
+    +bline(w,bY,pL,pR)
+    +vd(xm,ty(0)+2,bY,'#4a7fbf')+vd(xp,ty(0)+2,bY,'#1d5491')
+    +tl(tx(140),bY+14,'140','middle','#b0ada6')
+    +tl(xm,bY+14,'155','middle','#4a7fbf')
+    +tl(x17,bY+14,'170 (μ)','middle','#4a4844')
+    +tl(xp,bY+14,'185','middle','#1d5491','600',12)
+    +tl(tx(202),bY+14,'200','middle','#b0ada6')
+    +atl(x17,116,'68.27%','middle','#1d5491','600',12)
+    +atl(tx(198),170,'15.9%','middle','#1d5491','600',12)
+    +atl(tx(198),185,'← 구하는 값','middle','#1d5491','normal',11)
+    +atl(tx(143),170,'15.9%','middle','#8c8a84','600',12)
+    +atl(w-6,56,'(100% − 68.27%)','end','#9a9890','normal',10)
+    +atl(w-6,69,'= 31.73% → ÷ 2','end','#9a9890','normal',10)
+    +atl(w-6,82,'= 15.9% (한쪽 꼬리)','end','#1d5491','normal',10)
+    +`</svg>`;
+}
+
+/* ── Q2 ── */
+function drawQ2(){
+  const w=560,h=240,mu=170,s=1.5,xMin=164.5,xMax=175.5,pL=50,pR=14;
+  const{tx,ty,bY}=bellSetup(mu,s,xMin,xMax,w,h,pL,pR,160);
+  const[m1,p1]=[168.5,171.5];
+  const curve=npath(mu,s,xMin,xMax,300,tx,ty);
+  const mid=shadeArea(mu,s,m1,p1,bY,tx,ty);
+  const rt=shadeArea(mu,s,p1,xMax,bY,tx,ty,60);
+  const lt=shadeArea(mu,s,xMin,m1,bY,tx,ty,60);
+  const[xm,xp,x17]=[tx(m1),tx(p1),tx(170)];
+  return svgO(w,h)
+    +`<path d="${lt}" fill="#4a7fbf" opacity="0.15"/>`
+    +`<path d="${mid}" fill="#4a7fbf" opacity="0.30"/>`
+    +`<path d="${rt}" fill="#1d5491" opacity="0.55"/>`
+    +`<path d="${curve}" fill="none" stroke="#1a1918" stroke-width="1.6"/>`
+    +bline(w,bY,pL,pR)
+    +vd(xm,ty(0)+2,bY,'#4a7fbf')+vd(xp,ty(0)+2,bY,'#1d5491')
+    +tl(xm,bY+14,'168.5','middle','#4a7fbf')
+    +tl(xm,bY+25,'(−1 표준편차)','middle','#4a7fbf','normal',10)
+    +tl(x17,bY+14,'170 (μ)','middle','#4a4844')
+    +tl(xp,bY+14,'171.5','middle','#1d5491','600',12)
+    +tl(xp,bY+25,'(+1 표준편차)','middle','#1d5491','normal',10)
+    +atl(x17,116,'68.27%','middle','#1d5491','600',12)
+    +atl(tx(173.4),170,'15.9%','middle','#1d5491','600',12)
+    +atl(tx(173.4),185,'← 구하는 값','middle','#1d5491','normal',11)
+    +atl(tx(166.6),170,'15.9%','middle','#8c8a84','600',12)
+    +atl(w-6,56,'표본평균의 표준편차','end','#9a9890','normal',10)
+    +atl(w-6,69,'= σ/√n = 15/√100 = 1.5cm','end','#9a9890','normal',10)
+    +atl(w-6,82,'(100%−68.27%) ÷ 2','end','#9a9890','normal',10)
+    +atl(w-6,95,'= 15.9% (한쪽 꼬리)','end','#1d5491','normal',10)
+    +`</svg>`;
+}
+
+/* ── Q3 ── */
+function drawQ3(){
+  const w=560,h=240,mu=170,s=1.5,xMin=164.5,xMax=175.5,pL=50,pR=14;
+  const{tx,ty,bY}=bellSetup(mu,s,xMin,xMax,w,h,pL,pR,160);
+  const[m1,p1]=[168.5,171.5];
+  const curve=npath(mu,s,xMin,xMax,300,tx,ty);
+  const mid=shadeArea(mu,s,m1,p1,bY,tx,ty);
+  const lt=shadeArea(mu,s,xMin,m1,bY,tx,ty,60);
+  const rt=shadeArea(mu,s,p1,xMax,bY,tx,ty,60);
+  const[xm,xp,x17]=[tx(m1),tx(p1),tx(170)];
+  return svgO(w,h)
+    +`<path d="${lt}" fill="#4a7fbf" opacity="0.18"/>`
+    +`<path d="${mid}" fill="#1d5491" opacity="0.45"/>`
+    +`<path d="${rt}" fill="#4a7fbf" opacity="0.18"/>`
+    +`<path d="${curve}" fill="none" stroke="#1a1918" stroke-width="1.6"/>`
+    +bline(w,bY,pL,pR)
+    +vd(xm,ty(0)+2,bY,'#1d5491')+vd(xp,ty(0)+2,bY,'#1d5491')
+    +tl(xm,bY+14,'168.5','middle','#1d5491')
+    +tl(xm,bY+25,'(−1 표준편차)','middle','#1d5491','normal',10)
+    +tl(x17,bY+14,'170 (μ)','middle','#4a4844')
+    +tl(xp,bY+14,'171.5','middle','#1d5491','600',12)
+    +tl(xp,bY+25,'(+1 표준편차)','middle','#1d5491','normal',10)
+    +atl(x17,116,'68.27%','middle','#1d5491','600',14)
+    +atl(x17,133,'← 구하는 구간 →','middle','#1d5491','normal',10)
+    +atl(tx(166.6),170,'15.9%','middle','#8c8a84','600',12)
+    +atl(tx(173.4),170,'15.9%','middle','#8c8a84','600',12)
+    +`</svg>`;
+}
+
+/* ── Q4 ── */
+function drawQ4(){
+  const w=560,h=240,mu=170,s=1.5,xMin=164.5,xMax=175.5,pL=52,pR=14;
+  const{tx,ty,bY}=bellSetup(mu,s,xMin,xMax,w,h,pL,pR,160);
+  const[lo,hi]=[167.06,172.94];
+  const curve=npath(mu,s,xMin,xMax,300,tx,ty);
+  const mid=shadeArea(mu,s,lo,hi,bY,tx,ty);
+  const lt=shadeArea(mu,s,xMin,lo,bY,tx,ty,60);
+  const rt=shadeArea(mu,s,hi,xMax,bY,tx,ty,60);
+  const[xl,xh,x17]=[tx(lo),tx(hi),tx(170)];
+  return svgO(w,h)
+    +`<path d="${lt}" fill="#c04030" opacity="0.28"/>`
+    +`<path d="${mid}" fill="#1d5491" opacity="0.40"/>`
+    +`<path d="${rt}" fill="#c04030" opacity="0.28"/>`
+    +`<path d="${curve}" fill="none" stroke="#1a1918" stroke-width="1.6"/>`
+    +bline(w,bY,pL,pR)
+    +vd(xl,ty(0)+2,bY,'#1d5491')+vd(xh,ty(0)+2,bY,'#1d5491')
+    +tl(xl,bY+14,'167.06','middle','#1d5491')
+    +tl(xl,bY+25,'(−1.96 표준편차)','middle','#1d5491','normal',10)
+    +tl(x17,bY+14,'170 (μ)','middle','#4a4844')
+    +tl(xh,bY+14,'172.94','middle','#1d5491','600',12)
+    +tl(xh,bY+25,'(+1.96 표준편차)','middle','#1d5491','normal',10)
+    +atl(x17,116,'95%','middle','#1d5491','600',14)
+    +atl(x17,133,'← 구하는 구간 →','middle','#1d5491','normal',10)
+    +atl(tx(165.8),182,'2.5%','middle','#b03020','600',12)
+    +atl(tx(174.2),182,'2.5%','middle','#b03020','600',12)
+    +atl(w-6,56,'각 꼬리 = 2.5%씩 남기는 경계','end','#9a9890','normal',10)
+    +atl(w-6,69,'→ Z = ±1.96','end','#9a9890','normal',10)
+    +atl(w-6,82,'100% − 2.5% − 2.5%','end','#9a9890','normal',10)
+    +atl(w-6,95,'= 95%','end','#1d5491','normal',10)
+    +`</svg>`;
+}
+
+/* ── Q5 ── */
+function drawQ5(){
+  const w=560,h=178,pL=62,pR=14;
+  const cx=w/2,sc=34;
+  const toX=v=>cx+(v-170)*sc;
+  const half=1.96*1.5*sc;
+  const[c4,c5]=[toX(170),toX(169)];
+  const bY=135,y4=48,y5=88;
+  let ticks='';
+  for(const v of [166,167,168,169,170,171,172,173,174]){
+    const x=toX(v);
+    ticks+=`<line x1="${x.toFixed(1)}" y1="${bY-3}" x2="${x.toFixed(1)}" y2="${bY+3}" stroke="#c8c4bc" stroke-width="1"/>`;
+    ticks+=tl(x,bY+15,String(v),'middle','#8c8a84','normal',10);
+  }
+  return svgO(w,h)
+    +`<line x1="${pL}" y1="${bY}" x2="${w-pR}" y2="${bY}" stroke="#d4d0c8" stroke-width="1.2"/>`
+    +ticks
+    +`<line x1="${cx.toFixed(1)}" y1="26" x2="${cx.toFixed(1)}" y2="${bY}" stroke="#c0bbb0" stroke-width="1" stroke-dasharray="3,2"/>`
+    +tl(cx,20,'μ = ?','middle','#a8a4a0','normal',10)
+    // Q4 bar (faded)
+    +`<rect x="${(c4-half).toFixed(1)}" y="${y4-7}" width="${(half*2).toFixed(1)}" height="14" rx="3" fill="#7aaedd" opacity="0.22"/>`
+    +`<line x1="${(c4-half).toFixed(1)}" y1="${y4-7}" x2="${(c4-half).toFixed(1)}" y2="${y4+7}" stroke="#7aaedd" stroke-width="1.5"/>`
+    +`<line x1="${(c4+half).toFixed(1)}" y1="${y4-7}" x2="${(c4+half).toFixed(1)}" y2="${y4+7}" stroke="#7aaedd" stroke-width="1.5"/>`
+    +`<circle cx="${c4.toFixed(1)}" cy="${y4}" r="3" fill="#7aaedd"/>`
+    +tl(pL-4,y4+4,'4번 참고','end','#aaa8a2','normal',9)
+    +tl(c4,y4-13,'모평균(170) 중심의 95% 구간','middle','#9ab8d8','normal',10)
+    // Q5 bar
+    +`<rect x="${(c5-half).toFixed(1)}" y="${y5-8}" width="${(half*2).toFixed(1)}" height="16" rx="3" fill="#1d5491" opacity="0.40"/>`
+    +`<line x1="${(c5-half).toFixed(1)}" y1="${y5-8}" x2="${(c5-half).toFixed(1)}" y2="${y5+8}" stroke="#1d5491" stroke-width="2"/>`
+    +`<line x1="${(c5+half).toFixed(1)}" y1="${y5-8}" x2="${(c5+half).toFixed(1)}" y2="${y5+8}" stroke="#1d5491" stroke-width="2"/>`
+    +`<circle cx="${c5.toFixed(1)}" cy="${y5}" r="4" fill="#1d5491"/>`
+    +tl(pL-4,y5+4,'5번','end','#1d5491','500',10)
+    +tl(c5,y5-15,'표본평균(169) 중심의 95% 신뢰구간','middle','#1d5491','500',11)
+    +tl(c5-half,y5+24,'166.06','middle','#1d5491','normal',10)
+    +tl(c5+half,y5+24,'171.94','middle','#1d5491','normal',10)
+    +tl(w-6,y4+4,'± 2.94cm (폭 동일)','end','#a8a4a0','normal',10)
+    +`</svg>`;
+}
+
+/* ── Q6: two bell curves stacked, FIXED peak height ── */
+function drawQ6(){
+  const w=560, h=445, pL=58, pR=14, mu=170;
+  // Both panels share the SAME x-axis range so curves are comparable
+  const xMin=163, xMax=177;
+  const peakPx=140; // fixed bell height in pixels for both panels
+  // Panel heights and y-offsets
+  const pH=200, gap=20;
+  const panels=[
+    {s:1.5,  lo:167.06, hi:172.94, col:'#1d5491', lbl:'n = 100', ppm:'±2.94cm', yOff:0},
+    {s:0.75, lo:168.53, hi:171.47, col:'#1a5c34', lbl:'n = 400', ppm:'±1.47cm', yOff:pH+gap},
+  ];
+  let out=svgO(w,h);
+  panels.forEach(({s,lo,hi,col,lbl,ppm,yOff})=>{
+    const bYa = yOff + pH - 30;          // absolute baseline y
+    const tx = x => pL + (x-xMin)/(xMax-xMin)*(w-pL-pR);
+    const ty = bellTy(mu, s, bYa, peakPx); // FIXED peak height
+    const curve = npath(mu,s,xMin,xMax,400,tx,ty);
+    const mid   = shadeArea(mu,s,lo,hi,bYa,tx,ty,150);
+    const lt    = shadeArea(mu,s,xMin,lo,bYa,tx,ty,80);
+    const rt    = shadeArea(mu,s,hi,xMax,bYa,tx,ty,80);
+    const[xl,xh,x17]=[tx(lo),tx(hi),tx(mu)];
+    out+=`<path d="${lt}"    fill="#c04030" opacity="0.20"/>`;
+    out+=`<path d="${mid}"   fill="${col}"  opacity="0.40"/>`;
+    out+=`<path d="${rt}"    fill="#c04030" opacity="0.20"/>`;
+    out+=`<path d="${curve}" fill="none" stroke="#1a1918" stroke-width="1.6"/>`;
+    out+=`<line x1="${pL}" y1="${bYa}" x2="${w-pR}" y2="${bYa}" stroke="#d4d0c8" stroke-width="1"/>`;
+    out+=vd(xl, bYa-peakPx+10, bYa, col);
+    out+=vd(xh, bYa-peakPx+10, bYa, col);
+    out+=`<line x1="${x17.toFixed(1)}" y1="${yOff+12}" x2="${x17.toFixed(1)}" y2="${bYa}" stroke="#c8c4bc" stroke-width="1" stroke-dasharray="3,2"/>`;
+    // panel label
+    out+=tl(pL-4, yOff+24, lbl, 'end', col, '600', 11);
+    // 95% + width
+    out+=tl(x17, yOff+pH-80, '95%', 'middle', col, '600', 13);
+    out+=tl(x17, yOff+pH-64, ppm,   'middle', col, 'normal', 11);
+    // x-axis labels
+    out+=tl(xl,  bYa+14, lo.toString(),  'middle', col,       'normal', 10);
+    out+=tl(x17, bYa+14, '170',          'middle', '#6a6864', 'normal', 10);
+    out+=tl(xh,  bYa+14, hi.toString(),  'middle', col,       'normal', 10);
+  });
+  // divider between panels
+  const divY = pH + gap/2;
+  out+=`<line x1="30" y1="${divY}" x2="${w-10}" y2="${divY}" stroke="#e0ddd6" stroke-width="1" stroke-dasharray="5,4"/>`;
+  // bottom note
+  const noteY = (pH+gap)*2 - 10;
+  out+=tl(w/2, noteY, 'n이 4배 → 표본평균의 표준편차 ÷2 → 신뢰구간 폭 ÷2 (절반)', 'middle', '#6a6864', 'normal', 10);
+  out+=`</svg>`;
+  return out;
+}
+
+/* ── questions data ── */
+const Qs=[
+  {num:1,badge:'단일 관측값 확률',
+   text:`모집단의 평균 키가 <strong>170cm</strong>, 표준편차가 <strong>15cm</strong>인 정규분포에서 한 명을 무작위로 뽑을 때, 그 사람의 키가 <strong>185cm 이상</strong>일 확률은?`,
+   given:'X ~ N(170, 15²)', diagram:drawQ1,
+   sol:[
+    {ar:'①',t:'185는 평균 170에서 +15만큼 떨어져 있고, 이는 표준편차(15)의 정확히 +1배입니다. → Z = (185 − 170) / 15 = 1.00'},
+    {ar:'②',t:'즉, 이 문제는 Z값이 +1보다 클 확률, P(Z ≥ 1)을 구하는 것과 같습니다.'},
+    {ar:'③',t:'정규분포에서 평균 ± 1σ 구간에는 전체의 68.27%가 존재합니다. 나머지 (100% − 68.27%) = 31.73%는 이 구간 바깥에 있으며, 좌우 대칭이므로 각 꼬리에 절반씩 있습니다.'},
+    {ar:'④',t:'따라서 P(Z ≥ 1) = 31.73% ÷ 2 = 15.87%'},
+    {ans:'P(X ≥ 185) ≈ 15.9%'},
+  ]},
+  {num:2,badge:'표본평균의 분포',
+   text:`위와 동일한 모집단(평균 170cm, 표준편차 15cm)에서 <strong>100명</strong>을 무작위로 뽑았을 때, 표본 평균이 <strong>171.5cm 이상</strong>일 확률은?`,
+   given:'X̄ ~ N(170, (15/√100)²) = N(170, 1.5²)', diagram:drawQ2,
+   sol:[
+    {ar:'①',t:'100명을 뽑아 평균을 내면, 그 표본 평균 자체도 하나의 확률 분포를 가집니다. 이 분포의 표준편차(= 표본평균의 표준편차)는 σ/√n = 15/√100 = 1.5cm입니다.'},
+    {ar:'②',t:'171.5는 평균 170에서 +1.5만큼 떨어져 있고, 이는 표본평균의 표준편차(1.5)의 정확히 +1배입니다. → Z = (171.5 − 170) / 1.5 = 1.00'},
+    {ar:'③',t:'P(Z ≥ 1)을 구하는 것과 같습니다. 1번과 동일한 논리로 — 평균 ± 1 표준편차 구간에 68.27%가 존재하므로 나머지 31.73%가 양 꼬리에 절반씩 분포합니다.'},
+    {ar:'④',t:'따라서 P(Z ≥ 1) = 31.73% ÷ 2 = 15.87%'},
+    {ans:'P(X̄ ≥ 171.5) ≈ 15.9%'},
+    {note:'1번(개인 키 185cm)과 Z값이 똑같이 1.00입니다. 그러나 1번은 모평균에서 15cm(= 모집단 표준편차 1배) 떨어진 것이고, 여기서는 겨우 1.5cm(= 표본평균의 표준편차 1배) 떨어진 것입니다. 표본 수가 늘수록 표본 평균의 분포는 훨씬 좁아지기 때문입니다.'},
+    {note2:'<strong>1번과의 중요한 차이 — 중심극한정리:</strong> 1번에서는 개별 키가 정규분포를 따른다고 직접 가정했습니다. 반면 이 문제에서는 <strong>중심극한정리(Central Limit Theorem)</strong>에 근거합니다. 모집단이 정규분포를 따르든 그렇지 않든, 해당 모집단에서 n명을 뽑아 평균을 구하는 과정을 무수히 반복하면 그 표본평균들이 정규분포를 이룹니다. 실제로는 딱 한 번만 뽑지만, 그렇게 얻은 표본평균은 이 과정을 무수히 반복했을 때 형성되는 정규분포에서 나온 하나의 값으로 볼 수 있습니다.'},
+  ]},
+  {num:3,badge:'구간 확률',
+   text:`같은 조건(n=100)에서, 표본 평균이 <strong>168.5cm 이상 171.5cm 이하</strong>일 확률은?`,
+   given:'X̄ ~ N(170, 1.5²)', diagram:drawQ3,
+   sol:[
+    {ar:'①',t:'168.5는 평균 170에서 −1.5만큼, 171.5는 +1.5만큼 떨어져 있습니다. 표본평균의 표준편차가 1.5cm이므로, 두 값은 각각 평균에서 정확히 −1배, +1배 거리에 있습니다.'},
+    {ar:'②',t:'평균에서 떨어진 거리가 표준편차의 −1배에서 +1배 사이에는 몇 %의 자료가 있을까요? 이건 외워야 합니다 — 68.27%!'},
+    {ans:'P(168.5 ≤ X̄ ≤ 171.5) = 68.27%'},
+  ]},
+  {num:4,badge:'95% 구간',
+   text:`같은 조건(n=100)에서, 표본 평균이 아래 구간 안에 있을 확률은?<br><br>167.06 (= 170 − 1.96 × 1.5) &nbsp;에서&nbsp; 172.94 (= 170 + 1.96 × 1.5) 사이`,
+   given:'X̄ ~ N(170, 1.5²)', diagram:drawQ4,
+   sol:[
+    {ar:'①',t:'167.06은 평균 170에서 −2.94cm 떨어져 있고, 172.94는 +2.94cm 떨어져 있습니다. 표본평균의 표준편차(1.5cm)의 1.96배가 2.94cm입니다. → Z = ±2.94 / 1.5 = ±1.96'},
+    {ar:'②',t:'3번에서 ±1 표준편차 사이에 68.27%가 있다고 외웠죠. 마찬가지로 ±1.96 표준편차 사이에는 95%가 있다는 것도 함께 기억하세요.'},
+    {ans:'P(167.06 ≤ X̄ ≤ 172.94) = 95%'},
+    {note:'Z = ±1.96은 양쪽 꼬리를 각각 2.5%씩만 남기는 경계값입니다. ±1 표준편차 → 68.27%, ±1.96 표준편차 → 95%, 이 두 쌍을 세트로 기억해 두세요.'},
+    {note2:'이것이 신뢰구간의 핵심 원리입니다. 표본 평균은 95%의 확률로 모평균 ± 1.96 × (표본평균의 표준편차) 구간 안에 떨어집니다. 5번에서는 이 논리를 뒤집어, 표본 평균을 중심으로 구간을 만들어 모평균을 역으로 추정하게 됩니다.'},
+  ]},
+  {num:5,badge:'신뢰구간 산출',
+   text:`이번에는 모집단의 평균을 모르는 상황입니다. 같은 모집단(σ=15)에서 100명을 뽑아 측정하니 표본 평균이 <strong>169cm</strong>였습니다.<br><br>이 표본을 바탕으로 모평균의 <strong>95% 신뢰구간</strong>을 계산해 주세요. 즉, 아래 빈칸에 들어갈 숫자를 계산하세요.<br><br><span class="chip">169 ± ( ? ) cm</span>`,
+   given:null, diagram:drawQ5,
+   sol:[
+    {ar:'①',t:'표본평균의 표준편차 = σ/√n = 15/√100 = 1.5cm'},
+    {ar:'②',t:'4번에서 확인했듯, 표본 평균은 95%의 확률로 모평균 ± 1.96 × 1.5 안에 있습니다. → 1.96 × 1.5 = 2.94cm'},
+    {ar:'③',t:'모든 표본 평균이 동일한 길이의 막대(양 방향으로 2.94cm, 총 5.88cm)를 들고 있다고 상상해 보세요. 모평균이 어디에 있는지 몰라도, 내가 뽑은 표본 평균이 들고 있는 막대 안에 모평균이 포함될 확률은 95%입니다. 이 과정을 100번 반복한다면, 100번 중 약 95번은 그 막대 안에 모평균이 들어 있습니다.'},
+    {ar:'④',t:'내가 뽑은 표본의 평균이 169라고 해봅시다. 모든 표본의 평균이 양 방향으로 2.94cm 뻗어진 구간이 95% 신뢰구간입니다.'},
+    {ans:'169 ± 2.94cm  →  95% 신뢰구간: [166.06, 171.94]'},
+  ]},
+  {num:6,badge:'신뢰구간의 폭',
+   text:`95% 신뢰구간은 모평균을 구간으로 추정하는 개념으로, 신뢰구간(막대 길이)은 짧을수록 좋고, 신뢰도는 90%보다 95%가, 95%보다 99%가 더 좋습니다. 다만, 표본 수나 모집단의 표준편차 등이 동일한 상황에서는 신뢰도를 높이려면 신뢰구간(막대 길이)이 길어질 수밖에 없습니다. 신뢰도(95%)와 모표준편차(σ)를 유지한 채 신뢰구간을 줄이려면 표본 수를 늘려야 합니다.<br><br><strong>표본 수를 4배로 늘리면, 신뢰구간의 폭은 몇 배로 줄어들까요?</strong>`,
+   given:null, diagram:drawQ6,
+   sol:[
+    {ar:'①',t:'신뢰구간의 폭은 2 × 1.96 × (표본평균의 표준편차) = 2 × 1.96 × σ/√n 입니다.'},
+    {ar:'②',t:'n을 4배로 늘리면 √n이 2배가 됩니다. → √(4n) = 2√n'},
+    {ar:'③',t:'분모가 2배가 되므로 표본평균의 표준편차는 절반으로 줄고, 신뢰구간의 폭도 절반이 됩니다.'},
+    {ans:'신뢰구간의 폭은 1/2로 줄어든다 (절반)'},
+    {note:'n=100일 때 폭이 ±2.94cm(총 5.88cm)라면, n=400일 때는 ±1.47cm(총 2.94cm)가 됩니다. 정밀도를 2배 높이려면 표본 수는 4배가 필요합니다. √n 때문에 생기는 수확 체감입니다.'},
+  ]},
+];
+
+/* ── render ── */
+const wrap=document.getElementById('qs');
+const dotsEl=document.getElementById('dots');
+const nctEl=document.getElementById('nct');
+const done=new Array(Qs.length).fill(false);
+
+Qs.forEach((q,i)=>{
+  const dot=document.createElement('div');
+  dot.className='dot'+(i===0?' active':'');
+  dot.textContent=i+1;
+  dot.onclick=()=>document.getElementById('q'+i)?.scrollIntoView({behavior:'smooth',block:'start'});
+  dotsEl.appendChild(dot);
+
+  const solHTML=q.sol.map(s=>{
+    if(s.ans)  return `<div style="margin-top:.8rem"><span class="ans">${s.ans}</span></div>`;
+    if(s.note) return `<div class="note">${s.note}</div>`;
+    if(s.note2)return `<div class="note2">${s.note2}</div>`;
+    return `<div class="step"><span class="ar">${s.ar}</span><span>${s.t}</span></div>`;
+  }).join('');
+
+  const b=document.createElement('div');
+  b.className='qblock'+(i===0?' on':'');
+  b.id='q'+i;
+  b.innerHTML=`
+    <div class="qmeta"><span class="qnum">문제 ${q.num}</span><span class="qbadge">${q.badge}</span></div>
+    <div class="qtext">${q.text}${q.given?`<br><br><span class="chip">${q.given}</span>`:''}</div>
+    ${q.diagram?`<div class="dbox">${q.diagram()}</div>`:''}
+    <div><button class="btn" onclick="reveal(${i},this)">해설 보기</button></div>
+    <div class="sol" id="sol${i}"><div class="sol-lbl">풀이</div>${solHTML}</div>`;
+  wrap.appendChild(b);
+});
+
+function reveal(i,btn){
+  document.getElementById('sol'+i).classList.add('show');
+  btn.disabled=true; btn.textContent='확인 완료 ✓';
+  done[i]=true; updateDots();
+  // show answer labels in diagram
+  const qblock = document.getElementById('q'+i);
+  const dbox = qblock && qblock.querySelector('.dbox');
+  if(dbox) dbox.classList.add('revealed');
+  const next=document.getElementById('q'+(i+1));
+  if(next) setTimeout(()=>{next.classList.add('on');next.scrollIntoView({behavior:'smooth',block:'start'});},430);
+}
+function updateDots(){
+  const cnt=done.filter(Boolean).length;
+  nctEl.textContent=cnt+' / '+Qs.length+' 완료';
+  dotsEl.querySelectorAll('.dot').forEach((d,i)=>{
+    d.classList.remove('active','done');
+    if(done[i]) d.classList.add('done');
+    else if(i===cnt) d.classList.add('active');
+  });
+}
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const i=parseInt(e.target.id.replace('q',''));
+      if(!isNaN(i)) dotsEl.querySelectorAll('.dot').forEach((d,j)=>{if(!done[j])d.classList.toggle('active',j===i);});
+    }
+  });
+},{threshold:0.25});
+document.querySelectorAll('.qblock').forEach(b=>obs.observe(b));
+</script>
+
+<canvas id="drawCanvas"></canvas>
+<div id="drawToolbar">
+  <!-- pen toggle -->
+  <button class="dtb" id="dpenBtn" onclick="dToggle()" title="펜 (D키 / 우클릭)">✏️</button>
+  <div class="dsep"></div>
+  <!-- colours -->
+  <div class="dcol sel" style="background:#ef4444" onclick="dColor(this,'#ef4444')" title="빨강"></div>
+  <div class="dcol"     style="background:#f97316" onclick="dColor(this,'#f97316')" title="주황"></div>
+  <div class="dcol"     style="background:#facc15" onclick="dColor(this,'#facc15')" title="노랑"></div>
+  <div class="dcol"     style="background:#22c55e" onclick="dColor(this,'#22c55e')" title="초록"></div>
+  <div class="dcol"     style="background:#60a5fa" onclick="dColor(this,'#60a5fa')" title="파랑"></div>
+  <div class="dcol"     style="background:#ffffff" onclick="dColor(this,'#ffffff')" title="흰색"></div>
+  <div class="dsep"></div>
+  <!-- size -->
+  <button class="dtb" onclick="dSize(2)"  title="가는 펜" style="font-size:11px">●</button>
+  <button class="dtb" onclick="dSize(4)"  title="중간 펜" style="font-size:15px">●</button>
+  <button class="dtb" onclick="dSize(8)"  title="굵은 펜" style="font-size:20px">●</button>
+  <div class="dsep"></div>
+  <!-- highlighter -->
+  <button class="dtb" id="dhlBtn" onclick="dHighlight()" title="형광펜">🖍</button>
+  <!-- eraser -->
+  <button class="dtb" id="derBtn" onclick="dEraser()" title="지우개">🧹</button>
+  <div class="dsep"></div>
+  <!-- clear -->
+  <button class="dtb" onclick="dClear()" title="전체 지우기 (C키)">🗑</button>
+</div>
+
+<script>
+(function(){
+  const cv = document.getElementById('drawCanvas');
+  const ctx = cv.getContext('2d');
+  let drawing=false, active=false, erasing=false, highlighting=false;
+  let color='#ef4444', size=3;
+
+  function resize(){
+    // save existing drawing
+    const img = ctx.getImageData(0,0,cv.width,cv.height);
+    cv.width=window.innerWidth; cv.height=window.innerHeight;
+    ctx.putImageData(img,0,0);
+  }
+  window.addEventListener('resize', resize);
+  cv.width=window.innerWidth; cv.height=window.innerHeight;
+
+  // pointer events
+  cv.addEventListener('pointerdown', e=>{
+    if(!active) return;
+    drawing=true;
+    ctx.beginPath();
+    ctx.moveTo(e.clientX, e.clientY);
+    if(erasing){
+      ctx.globalCompositeOperation='destination-out';
+      ctx.lineWidth=size*6;
+    } else if(highlighting){
+      ctx.globalCompositeOperation='source-over';
+      ctx.globalAlpha=0.35;
+      ctx.lineWidth=size*5;
+      ctx.strokeStyle=color;
+    } else {
+      ctx.globalCompositeOperation='source-over';
+      ctx.globalAlpha=1;
+      ctx.lineWidth=size;
+      ctx.strokeStyle=color;
+    }
+    ctx.lineCap='round'; ctx.lineJoin='round';
+  });
+  cv.addEventListener('pointermove', e=>{
+    if(!drawing) return;
+    ctx.lineTo(e.clientX, e.clientY);
+    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(e.clientX, e.clientY);
+  });
+  cv.addEventListener('pointerup', ()=>{ drawing=false; ctx.globalAlpha=1; });
+  cv.addEventListener('pointerleave', ()=>{ drawing=false; ctx.globalAlpha=1; });
+
+  // right-click toggle
+  document.addEventListener('contextmenu', e=>{
+    e.preventDefault(); dToggle();
+  });
+  // keyboard
+  document.addEventListener('keydown', e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+    if(e.key==='d'||e.key==='D') dToggle();
+    if(e.key==='c'||e.key==='C') dClear();
+    if(e.key==='Escape'){ active=false; cv.classList.remove('active'); document.getElementById('dpenBtn').classList.remove('on'); }
+  });
+
+  window.dToggle=function(){
+    active=!active;
+    cv.classList.toggle('active', active);
+    document.getElementById('dpenBtn').classList.toggle('on', active);
+    if(active){ erasing=false; highlighting=false; document.getElementById('derBtn').classList.remove('on'); document.getElementById('dhlBtn').classList.remove('on'); }
+  };
+  window.dColor=function(el, c){
+    color=c; erasing=false; highlighting=false;
+    document.querySelectorAll('.dcol').forEach(d=>d.classList.remove('sel'));
+    el.classList.add('sel');
+    document.getElementById('derBtn').classList.remove('on');
+    document.getElementById('dhlBtn').classList.remove('on');
+  };
+  window.dSize=function(s){ size=s; };
+  window.dHighlight=function(){
+    highlighting=!highlighting; erasing=false;
+    document.getElementById('dhlBtn').classList.toggle('on', highlighting);
+    document.getElementById('derBtn').classList.remove('on');
+  };
+  window.dEraser=function(){
+    erasing=!erasing; highlighting=false;
+    document.getElementById('derBtn').classList.toggle('on', erasing);
+    document.getElementById('dhlBtn').classList.remove('on');
+  };
+  window.dClear=function(){ ctx.clearRect(0,0,cv.width,cv.height); };
+})();
+</script>
+
+</body>
+</html>
